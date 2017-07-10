@@ -75,6 +75,10 @@ SystematicManager::AddDist(const BinnedED& pdf, const std::vector<std::string>& 
     UniqueSystematics(syss_);
     fEDGroups[pdf.GetName()] = syss_;
 }
+void
+SystematicManager::AddDist(const BinnedED& pdf, const std::string& syss_){
+    AddDist(pdf,std::vector<std::string>(1,syss_));
+}
 
 void
 SystematicManager::DistortEDs(std::vector<BinnedED>& fWorkingEDs_) const {
