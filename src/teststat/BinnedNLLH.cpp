@@ -1,4 +1,5 @@
 #include <BinnedNLLH.h>
+#include <Formatter.hpp>
 #include <math.h>
 #include <DataSet.h>
 #include <Exceptions.h>
@@ -32,7 +33,7 @@ BinnedNLLH::Evaluate(){
     for(size_t i = 0; i < fDataDist.GetNBins(); i++){
         double prob = fPdfManager.BinProbability(i);
         if(!prob)
-            throw std::runtime_error("BinnedNLLH::Encountered zero probability bin!");
+            throw std::runtime_error(Formatter()<<"BinnedNLLH::Encountered zero probability bin! On : "<<fDataDist.GetName());
         nLogLH -= fDataDist.GetBinContent(i) *  log(prob);        
     }
 
@@ -210,6 +211,14 @@ BinnedNLLH::RegisterFitComponents(){
 
 void
 BinnedNLLH::SetParameters(const ParameterDict& params_){
+    // for(ParameterDict::const_iterator i= params_.begin(); i!= params_.end(); ++i){
+    //     std::cout << i->first<< " "; 
+    // }
+    // std::cout<< std::endl;
+    // for(ParameterDict::const_iterator i= params_.begin(); i!= params_.end(); ++i){
+    //     std::cout << i->second<< " "; 
+    // }
+    // std::cout<< std::endl;
     try{
         fComponentManager.SetParameters(params_);
     }
