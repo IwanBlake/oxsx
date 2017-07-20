@@ -31,6 +31,7 @@ class SparseMatrix{
     size_t GetNCols() const {return fNCols;}
     void   SetZeros();
     void   SetToIdentity();
+    void   Print();
 
  private:
     arma::sp_mat fArmaMat;
