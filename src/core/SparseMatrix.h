@@ -32,6 +32,9 @@ class SparseMatrix{
     void   SetZeros();
     void   SetToIdentity();
 
+    void   Print(const std::string&);
+    void   PrintDense(const std::string&);
+
  private:
     arma::sp_mat fArmaMat;
     int fNRows;
