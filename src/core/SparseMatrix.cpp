@@ -10,6 +10,15 @@ SparseMatrix::SparseMatrix(int rows_, int cols_){
     fArmaMat = arma::sp_mat(fNRows, fNCols);
 }
 
+
+void 
+SparseMatrix::Print(){
+    // fArmaMat.print();
+    arma::mat B(fArmaMat);
+    B.print("B:");
+
+}
+
 void 
 SparseMatrix::SetComponent(size_t row_, size_t col_, double val_){
     if (col_ >= fNCols || row_ >= fNRows)
