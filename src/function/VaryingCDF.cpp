@@ -32,7 +32,6 @@ VaryingCDF::~VaryingCDF(){
 VaryingCDF::VaryingCDF(const VaryingCDF& copy_){
     fFunctions = copy_.fFunctions;
     fCdf = copy_.fCdf->Clone();
-    fPdf = static_cast<PDF*> (copy_.fPdf->Clone());
     fName = copy_.fName;
 }
 
@@ -40,7 +39,6 @@ VaryingCDF&
 VaryingCDF::operator=(const VaryingCDF& copy_){
     fFunctions = copy_.fFunctions;
     fCdf = copy_.fCdf->Clone();
-    fPdf = static_cast<PDF*> (copy_.fPdf->Clone());
     fName = copy_.fName;
     return *this;
 }
@@ -50,22 +48,13 @@ VaryingCDF::Clone() const{
     return static_cast<ConditionalPDF*> (new VaryingCDF(*this));
 }
 
-std::vector<double>
-VaryingCDF::Diff(const std::vector<double>& x_, 
-                 const std::vector<double>& x2_) const{
-  std::vector<double> diff = x_;
-  std::transform(diff.begin(), diff.end(), x2_.begin(), 
-                 diff.begin(), std::minus<double>());
-  return diff;
-}
-
-std::vector<double>
-VaryingCDF::Sum(const std::vector<double>& x_,
-                               const std::vector<double>& x2_) const{
-  std::vector<double> sum = x_;
-  std::transform(sum.begin(), sum.end(), x2_.begin(),
-                 sum.begin(), std::plus<double>());
-  return sum;
+ParameterDict
+VaryingCDF::SetupParameters(const std::vector<double>& x2_) const {
+    ParameterDict parameters;
+    for(std::map<std::string,Function*>::const_iterator parameter_ = fFunctions.begin(); parameter_ !=fFunctions.end(); ++parameter_) {
+        parameters[parameter_->first] = (parameter_->second)->operator()(x2_);
+    }
+    return parameters;
 }
 
 double
@@ -73,19 +62,7 @@ VaryingCDF::ConditionalProbability(const std::vector<double>& x_,
                                    const std::vector<double>& x2_){
     if (!fCdf)
         throw NULLPointerAccessError(Formatter()<<"VaryingCDF:: fCdf is not pointing to a PDF.");
-    // if (!fPdf)
-    //     throw NULLPointerAccessError(Formatter()<<"VaryingCDF:: fPdf is not pointing to a PDF.");
-    ParameterDict parameters;
-    for(std::map<std::string,Function*>::const_iterator parameter_ = fFunctions.begin(); parameter_ !=fFunctions.end(); ++parameter_) {
-        parameters[parameter_->first] = (parameter_->second)->operator()(x2_);
-    }
-
-    fCdf->SetParameters(parameters);
-    // //BL: Once you have set the parameters you need to get the probabily of the
-    // //value x with the PDF is centered on x2_.
-    // return fPdf->operator()(Diff(x_,x2_));
-    // JumpPDF * Pdf = dynamic_cast<JumpPDF*>(fCdf);
-    // return Pdf->ConditionalProbability(x_,x2_);
+    fCdf->SetParameters(SetupParameters(x2_));
     return fCdf->ConditionalProbability(x_,x2_);
 }
 
@@ -98,48 +75,30 @@ double
 VaryingCDF::Integral(const std::vector<double>& mins_, 
                               const std::vector<double>& maxs_,
                               const std::vector<double>& x2_) const{
-
     if (!fCdf)
         throw NULLPointerAccessError(Formatter()<<"VaryingCDF:: fCdf is not pointing to a ConditionalPDF.");
-    ParameterDict parameters;
-    for(std::map<std::string,Function*>::const_iterator parameter_ = fFunctions.begin(); parameter_ !=fFunctions.end(); ++parameter_) {
-        parameters[parameter_->first] = (parameter_->second)->operator()(x2_);
-    }
-
-    fCdf->SetParameters(parameters);
+    fCdf->SetParameters(SetupParameters(x2_));
     return fCdf->Integral(mins_,maxs_,x2_);
 }
 
-// void 
-// VaryingCDF::SetKernel(ConditionalPDF* PDF_){
-//     fCdf=PDF_->Clone();
-// }
+void 
+VaryingCDF::SetKernel(ConditionalPDF* PDF_){
+    fCdf=PDF_->Clone();
+}
 
 void 
 VaryingCDF::SetKernel(PDF* PDF_){
     // BL : If we are passed a PDF we transform to a JumpPDF in order to perserve
     // the structure of shifting a function to a bin center and integrating over
-    // over the bins relative to that shift.
-    // We also take a pointier to the PDF_ in order to get conditional probabilities and sample .
+    // over bins relative to that shift.
     fCdf=static_cast<ConditionalPDF*>(new JumpPDF("kernel",PDF_));
-    fPdf = PDF_;
 }
 
 std::vector<double>
 VaryingCDF::Sample(const std::vector<double>& x2_) const{
-    // if (!fPdf)
-        // throw NULLPointerAccessError(Formatter()<<"VaryingCDF:: fPdf is not pointing to a ConditionalPDF.");
     if (!fCdf)
         throw NULLPointerAccessError(Formatter()<<"VaryingCDF:: fCdf is not pointing to a ConditionalPDF.");
-    // ParameterDict parameters;
-    // for(std::map<std::string,Function*>::const_iterator parameter_ = fFunctions.begin(); parameter_ !=fFunctions.end(); ++parameter_) {
-    //     parameters[parameter_->first] = (parameter_->second)->operator()(x2_);
-    // }
-    //
-    // fPdf->SetParameters(parameters);
-    // return Sum(fPdf->Sample(),x2_);
-    // JumpPDF * Pdf = dynamic_cast<JumpPDF*>(fCdf);
-    // return Pdf->Sample(x2_);
+    fCdf->SetParameters(SetupParameters(x2_));
     return fCdf->Sample(x2_);
 }
 
@@ -152,6 +111,7 @@ VaryingCDF::SetParameter(const std::string& name_, double value_){
 
 double 
 VaryingCDF::GetParameter(const std::string& name_) const{
+    //This reutrns parameters of the parameter functions that have been defined.
     size_t changed = 0;
     double holder=0;
     for (std::map<std::string,Function*>::const_iterator function = fFunctions.begin(); function != fFunctions.end(); ++function) {

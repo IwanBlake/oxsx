@@ -29,11 +29,11 @@ class VaryingCDF : public ConditionalPDF{
 
     ConditionalPDF* Clone() const;
 
-    // void SetKernel(ConditionalPDF* PDF_);
+    void SetKernel(ConditionalPDF* PDF_);
     void SetKernel(PDF* PDF_);
     void SetDependance(const std::string& paraName_, const Function* func_);
-    std::vector<double> Diff(const std::vector<double>& x_, const std::vector<double>& x2_) const;
-    std::vector<double> Sum(const std::vector<double>& x_, const std::vector<double>& x2_) const;
+
+    ParameterDict SetupParameters(const std::vector<double>& x2_) const;
 
     // FitParameter interface.
     void   SetParameter(const std::string& name_, double value);
@@ -52,7 +52,6 @@ class VaryingCDF : public ConditionalPDF{
  private:
     std::map<std::string, Function*> fFunctions;
     ConditionalPDF* fCdf;
-    PDF* fPdf;
     
     std::string fName;
 };
