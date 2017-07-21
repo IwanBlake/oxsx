@@ -33,6 +33,7 @@ class VaryingCDF : public ConditionalPDF{
     void SetKernel(PDF* PDF_);
     void SetDependance(const std::string& paraName_, const Function* func_);
     std::vector<double> Diff(const std::vector<double>& x_, const std::vector<double>& x2_) const;
+    std::vector<double> Sum(const std::vector<double>& x_, const std::vector<double>& x2_) const;
 
     // FitParameter interface.
     void   SetParameter(const std::string& name_, double value);
