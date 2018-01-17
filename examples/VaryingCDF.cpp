@@ -39,23 +39,27 @@ class Ploy : public Function{
             fName=name_;
             parameters["grad"]=grad;
             parameters["offset"]=offset;
+            names["grad"]="grad";
+            names["offset"]="offset";
         }
 
         Ploy(const Ploy& copy_){
             fName=copy_.fName;
             parameters=copy_.parameters;
+            names = copy_.names;
         }
 
 
         Ploy& operator=(const Ploy& copy_){
             fName=copy_.fName;
             parameters=copy_.parameters;
+            names = copy_.names;
             return *this;
         }
 
         // Probability
         double operator()(const std::vector<double>& vals_) const{
-            return parameters.at("grad")*sqrt(abs(vals_[0]))+parameters.at("offset");
+            return parameters.at(names.at("grad"))*sqrt(vals_[0])+parameters.at(names.at("offset"));
         }
 
         int GetNDims() const{
@@ -92,10 +96,14 @@ class Ploy : public Function{
         }
 
         std::set<std::string> GetParameterNames() const {
-            std::set<std::string> names_;
-            names_.insert("grad");
-            names_.insert("offset");
-            return names_;
+            // std::set<std::string> names_;
+            // names_.insert("grad");
+            // names_.insert("offset");
+            return GetKeys(parameters);
+        }
+        
+        void RenameParameterStore(const std::string& para_, const std::string& new_){
+            names[para_]=new_;
         }
 
         void RenameParameter(const std::string& old_, const std::string& new_){
@@ -113,6 +121,95 @@ class Ploy : public Function{
     private:
         std::string fName;
         ParameterDict parameters;
+        std::map<std::string,std::string> names;
+};
+
+class Norm: public Function{
+    public:
+        // Constructory things
+        Norm(const std::string& name_,const double grad, const double offset){
+            fName=name_;
+            parameters["mean"]=grad;
+            names["mean"]=std::string("mean");
+        }
+
+        Norm(const Norm& copy_){
+            fName=copy_.fName;
+            parameters=copy_.parameters;
+            names = copy_.names;
+        }
+
+
+        Norm& operator=(const Norm& copy_){
+            fName=copy_.fName;
+            parameters=copy_.parameters;
+            names = copy_.names;
+            return *this;
+        }
+
+        // Probability
+        double operator()(const std::vector<double>& vals_) const{
+            return parameters.at(names.at("mean"));
+        }
+
+        int GetNDims() const{
+            return 1;
+        }
+
+        Function* Clone() const{
+            return static_cast<Function*> (new Norm(*this));
+        }
+
+        void SetParameter(const std::string& name_, double value_){
+            parameters[name_]=value_;
+        }
+
+        double GetParameter(const std::string& name_) const{
+            return parameters.at(name_);
+        }
+
+        void SetParameters(const ParameterDict& paraDict_){
+            for (ParameterDict::const_iterator function =paraDict_.begin(); function != paraDict_.end(); ++function) {
+                std::set<std::string> holder=GetKeys(parameters);
+
+                if(holder.find(function->first)!=holder.end())
+                    SetParameter(function->first,function->second);
+            }
+        }
+
+        ParameterDict GetParameters() const{
+            return parameters;
+        }
+
+        size_t GetParameterCount() const{
+            return 1;
+        }
+
+        std::set<std::string> GetParameterNames() const {
+            return GetKeys(parameters);
+        }
+
+        void RenameParameterStore(const std::string& para_, const std::string& new_){
+            names[para_]=new_;
+        }
+
+        void RenameParameter(const std::string& old_, const std::string& new_){
+            parameters[new_]=parameters[old_];
+            parameters.erase(old_);
+        }
+
+        std::string GetName() const{
+            return fName;   
+        }
+
+        void SetName(const std::string& name_){
+            fName= name_;
+        }
+    private:
+        std::string fName;
+        std::map<std::string, double> parameters;
+        // ParameterDict parameters;
+        std::map<std::string, std::string> names;
 };
 
 int main(int argc, char *argv[])

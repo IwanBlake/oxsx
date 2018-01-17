@@ -24,9 +24,6 @@ VaryingCDF::VaryingCDF(const std::string& name_ = ""){
 }
 VaryingCDF::~VaryingCDF(){
     delete fCdf;
-    for(std::map<std::string,Function*>::const_iterator parameter_ = fFunctions.begin(); parameter_ !=fFunctions.end(); ++parameter_) {
-        delete parameter_->second;
-    }
 }
 
 VaryingCDF::VaryingCDF(const VaryingCDF& copy_){
