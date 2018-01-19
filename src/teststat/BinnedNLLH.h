@@ -9,6 +9,7 @@
 #include <CutCollection.h>
 #include <CutLog.h>
 #include <QuadraticConstraint.h>
+#include <PriorManager.h>
 #include <map>
 #include <vector>
 
@@ -65,6 +66,7 @@ class BinnedNLLH : public TestStatistic{
     BinnedEDManager      fPdfManager;
     SystematicManager    fSystematicManager;
     BinnedEDShrinker     fPdfShrinker;
+    PriorManager         fPriorManager;
     DataSet*             fDataSet;
     CutCollection        fCuts;
     std::map<std::string, QuadraticConstraint> fConstraints;
