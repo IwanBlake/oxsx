@@ -48,7 +48,15 @@ BinnedNLLH::Evaluate(){
         it != fConstraints.end(); ++it)
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
 
+    // The logged probabilty will be negative, therefore we take it away from the nLogLH.
+    nLogLH -= fPriorManager.GetLogProbabilities(fComponentManager.GetParameters());
+
     return nLogLH;
+}
+
+void
+BinnedNLLH::AddPrior(const Prior& pir_){
+  fPriorManager.AddPrior(pir_);
 }
 
 void
