@@ -21,7 +21,7 @@ class Prior{
 
 
         void SetPrimary(const std::string&);
-        std::string GetPrimary(){return fPrimary;}
+        std::string GetPrimary()const{return fPrimary;}
         void SetDependent(const std::string&);
         void SetDependents(std::vector<std::string>&);
         std::vector<std::string> GetDependents(){return fDependence;}

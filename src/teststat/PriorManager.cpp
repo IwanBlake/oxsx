@@ -19,13 +19,12 @@ PriorManager::GetNPriors(){
   return priorList.size();
 }
 void
-PriorManager::AddPrior(Prior& prior){
-  const std::string pri = prior.GetPrimary();
+PriorManager::AddPrior(const Prior& prior){
+  std::string pri = prior.GetPrimary();
   for (std::vector<Prior>::iterator i = priorList.begin(); i != priorList.end(); ++i) {
     if (i->GetPrimary()== pri)
       throw LogicError(Formatter()<<"PriorManager:: Two prior  priors with the same primary variable");
   }
-  
   priorList.push_back(prior);
 }
 

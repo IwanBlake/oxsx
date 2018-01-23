@@ -54,6 +54,11 @@ BinnedNLLH::Evaluate(){
 }
 
 void
+BinnedNLLH::AddPrior(const Prior& pir_){
+  fPriorManager.AddPrior(pir_);
+}
+
+void
 BinnedNLLH::BinData(){
     fDataDist =  BinnedED(fPdfManager.GetOriginalPdf(0)); // make a copy for same binning and data rep
     fDataDist.Empty();

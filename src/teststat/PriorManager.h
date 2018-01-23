@@ -18,7 +18,7 @@ class PriorManager{
             priorList=initList;
         }
 
-        void AddPrior(Prior& prior);
+        void AddPrior(const Prior& prior);
         std::vector<Prior> GetPriors();
         int GetNPriors();
         double GetProbabilities( const ParameterDict& params_);

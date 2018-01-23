@@ -9,6 +9,7 @@
 #include <CutCollection.h>
 #include <CutLog.h>
 #include <QuadraticConstraint.h>
+#include <Prior.h>
 #include <PriorManager.h>
 #include <map>
 #include <vector>
@@ -28,6 +29,7 @@ class BinnedNLLH : public TestStatistic{
     void   AddSystematics(const std::vector<Systematic*>);
 
     void   SetConstraint(const std::string& paramName_, double mean_, double sigma_);
+    void   AddPrior(const Prior&);
     
     void SetNormalisations(const std::vector<double>& norms_);
     std::vector<double> GetNormalisations() const;
