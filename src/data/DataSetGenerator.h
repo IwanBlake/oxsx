@@ -40,6 +40,7 @@ class DataSetGenerator{
     std::vector<std::vector<size_t> > fEventIndicies;
     std::vector<size_t>      fMaxs;
     void                     RandomDrawsNoReplacement(size_t handleIndex_, int nEvents_, OXSXDataSet& data_);
+    void                     RandomDrawsWithReplacement(size_t handleIndex_, int nEvents_, OXSXDataSet& data_);
     bool                     fBootstrap;
     CutCollection            fCuts;
 };

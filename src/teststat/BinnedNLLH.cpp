@@ -46,7 +46,10 @@ BinnedNLLH::Evaluate(){
     for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
         it != fConstraints.end(); ++it)
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
-   
+
+    // The logged probabilty will be negative, therefore we take it away from the nLogLH.
+    nLogLH -= fPriorManager.GetLogProbabilities(fComponentManager.GetParameters());
+
     return nLogLH;
 }
 

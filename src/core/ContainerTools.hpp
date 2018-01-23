@@ -133,5 +133,22 @@ std::string ToString(const T1& c_, const std::string& delimit_ = ", "){
     return f.str();
 }
 
+// thanks to https://stackoverflow.com/questions/236129/most-elegant-way-to-split-a-string
+template<typename Out>
+void Split(const std::string &s, char delim, Out result) {
+    std::stringstream ss;
+    ss.str(s);
+    std::string item;
+    while (std::getline(ss, item, delim)) {
+        if(!item.empty())
+            *(result++) = item;
+    }
+}
+    
+    
+std::vector<std::string>
+Split(const std::string &s, char delim = ' '); 
+
+    
 } // namespace
 #endif

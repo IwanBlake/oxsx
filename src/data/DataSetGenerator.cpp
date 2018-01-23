@@ -25,7 +25,7 @@ DataSetGenerator::SetDataSets(const std::vector<DataSet*> sets_){
     fEventIndicies.clear();
     fMaxs.clear();
     fEventIndicies.resize(sets_.size());
-    fMaxs.resize(sets_.size(), 0);
+    fMaxs.resize(sets_.size(), -999);
 }
 
 void
@@ -45,7 +45,8 @@ DataSetGenerator::ExpectedRatesDataSet(){
     dataSet.SetObservableNames(fDataSets.at(0)->GetObservableNames());
     for(size_t i = 0; i < fDataSets.size(); i++){
         unsigned expectedCounts = round(fExpectedRates.at(i));
-        RandomDrawsNoReplacement(i, expectedCounts, dataSet);
+	fBootstrap ? RandomDrawsWithReplacement(i, expectedCounts, dataSet) 
+	  : RandomDrawsNoReplacement(i, expectedCounts, dataSet);
     }
             
     return dataSet;
@@ -62,7 +63,8 @@ DataSetGenerator::PoissonFluctuatedDataSet(){
     dataSet.SetObservableNames(fDataSets.at(0)->GetObservableNames());
     for(size_t i = 0; i < fDataSets.size(); i++){
         int counts = Rand::Poisson(fExpectedRates.at(i));
-        RandomDrawsNoReplacement(i, counts, dataSet);
+        fBootstrap ? RandomDrawsWithReplacement(i, counts, dataSet) 
+	  : RandomDrawsNoReplacement(i, counts, dataSet);
     }        
     return dataSet;
 }
@@ -91,9 +93,10 @@ DataSetGenerator::AllRemainingEvents(){
   }
   for(size_t iDS = 0; iDS < fDataSets.size(); iDS++){   
     size_t nEvents = fMaxs.at(iDS);
-    if (!nEvents) 
-      nEvents = fDataSets.at(iDS) -> GetNEntries();
+    if (nEvents==-999) 
+      nEvents = (fDataSets.at(iDS) -> GetNEntries()) - 1;
 
+    if (nEvents==-1) continue; //in case all events drawn and not replaced
     const std::vector<size_t>& eventIndices = fEventIndicies[iDS];
 
     for(size_t jEV = 0; jEV <= nEvents; jEV++){   
@@ -108,7 +111,7 @@ void
 DataSetGenerator::Reset(){
   fEventIndicies.clear();
   fEventIndicies.resize(fDataSets.size());
-  fMaxs = std::vector<size_t>(fDataSets.size(), 0);
+  fMaxs = std::vector<size_t>(fDataSets.size(), -999);
 }
 
 void
@@ -141,7 +144,7 @@ DataSetGenerator::RandomDrawsNoReplacement(size_t handleIndex_, int nEvents_,
     if(!(i%10000))
       std::cout << i << "/" << nEvents_ << std::endl;
 
-    if (!max)
+    if (max==-999)
       max = eventIndices.size() -1;
     // draw
     draw = Rand::Shoot(max);
@@ -161,6 +164,49 @@ DataSetGenerator::RandomDrawsNoReplacement(size_t handleIndex_, int nEvents_,
 
   return;
 }
+
+
+void
+DataSetGenerator::RandomDrawsWithReplacement(size_t handleIndex_, int nEvents_, 
+					          OXSXDataSet& outData_
+					     ){
+
+  std::vector<size_t>& eventIndices = fEventIndicies[handleIndex_];
+  size_t& max = fMaxs[handleIndex_];
+  DataSet* origData = fDataSets.at(handleIndex_);
+  if(!(origData->GetNEntries()))
+    throw NotFoundError(Formatter() << "DataSetGenerator::RandomDrawsWithReplacement() asked for "
+                        << nEvents_ << " but there are no events!");
+
+  if(!eventIndices.size()){
+    eventIndices.reserve(origData->GetNEntries());
+    for(size_t i = 0; i < origData -> GetNEntries(); i++)
+      eventIndices.push_back(i);
+    max = eventIndices.size() - 1; // the effective end of the array
+  }
+
+  size_t draw  = -1; // the random draw 
+
+  outData_.Reserve(outData_.GetNEntries() + nEvents_);
+  for(size_t i = 0; i < nEvents_; i++){
+    if(!(i%10000))
+      std::cout << i << "/" << nEvents_ << std::endl;
+
+
+    if (max==-999)
+      max = eventIndices.size() -1;
+
+    // draw
+    draw = Rand::Shoot(max);
+
+    // return 
+    if(fCuts.PassesCuts(origData -> GetEntry(eventIndices[draw])))
+      outData_.AddEntry(origData -> GetEntry(eventIndices[draw]));
+  }
+
+  return;
+}
+
 
 void
 DataSetGenerator::AddDataSet(DataSet* data_, double rate_){

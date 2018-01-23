@@ -76,4 +76,16 @@ class NULLPointerAccessError : public OXSXException{
                    << " Attempted access on NULL pointer. " << errorStr_ 
                    ) {}  
 };
+
+class ConfigSectionMissing : public OXSXException{
+ public:
+ ConfigSectionMissing(const std::string& str_) : OXSXException(str_) {}
+};
+
+
+class ConfigFieldMissing : public OXSXException{
+ public:
+ ConfigFieldMissing(const std::string& str_) : OXSXException(str_) {}
+};
+
 #endif

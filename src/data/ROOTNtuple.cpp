@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Exceptions.h>
 #include <TNtuple.h>
+#include <Formatter.hpp>
 
 ROOTNtuple::ROOTNtuple(const std::string& fileName_, const std::string& treeName_){
     fROOTFile = new TFile(fileName_.c_str());
@@ -16,7 +17,7 @@ ROOTNtuple::ROOTNtuple(const std::string& fileName_, const std::string& treeName
 
     if(!fNtuple){
         delete fROOTFile;
-        throw IOError("ROOTNtuple::Tree does not exist, or isn't an ntuple! " + treeName_);
+        throw IOError(Formatter()<<"ROOTNtuple::Tree does not exist, or isn't an ntuple! tree : " << treeName_ << ", filename: "<<fileName_);
     }        
 
 }
