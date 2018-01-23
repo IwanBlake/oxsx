@@ -14,6 +14,8 @@ class Prior{
         ~Prior();
         Prior(const Prior&);
         Prior& operator=(const Prior&);
+        Prior(const std::string& pri_, Function* func):
+            fPrimary(pri_), function(func){;}
         Prior(const std::string& pri_,std::vector<std::string>& deps_ , Function* func):
             fPrimary(pri_), fDependence(deps_), function(func){;}
         Prior(const std::string& pri_,std::string& dep_ , Function* func):
