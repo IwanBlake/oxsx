@@ -14,6 +14,8 @@ Rand::Uniform(double max_){
 
 double
 Rand::UniformRange(double min_, double max_){
+    if( min_> max_)
+      throw ValueError(Formatter() << "Rand::Calling UniformRange with invalid limits. Range "<<min_<<" < x < "<< max_<<".");
     return max_ - (max_-min_) * fRandomGen.Rndm();
 }
 
