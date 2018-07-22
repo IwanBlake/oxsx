@@ -34,7 +34,7 @@ void padPDFs(std::vector<BinnedED>& binnedEDList);
 void
 function(){
 
-    Rand::SetSeed(0);
+    Rand::SetSeed(1);
 
     Gaussian gaus1(10, 0.65);
     Gaussian gaus2(15, 0.5);
@@ -106,15 +106,15 @@ function(){
     ParameterDict minima;
     minima["a_mc_norm"] = 10; 
     minima["b_mc_norm"] = 10; 
-    minima["gaus_a_1" ] = -15;
-    minima["gaus_a_2" ] = 0;  
-    minima["gaus_b_1" ] = -15;
-    minima["gaus_b_2" ] = 0;  
+    minima["gaus_a_1" ] = -7;
+    minima["gaus_a_2" ] = 0.2;  
+    minima["gaus_b_1" ] = 0;
+    minima["gaus_b_2" ] = 0.2;  
 
     ParameterDict maxima;
     maxima["a_mc_norm"] = 200000;
     maxima["b_mc_norm"] = 200000;
-    maxima["gaus_a_1" ] = 15;    
+    maxima["gaus_a_1" ] = 0;    
     maxima["gaus_a_2" ] = 1;     
     maxima["gaus_b_1" ] = 16.;   
     maxima["gaus_b_2" ] = 1;     
@@ -163,7 +163,7 @@ function(){
     lh.AddDist(mcPdfs.at(1),std::vector<std::string>(1,"bGroup"));
 
     Minuit min;
-    min.SetMethod("Simplex");
+    min.SetMethod("Migrad");
     min.SetMaxCalls(10000000);
     min.SetMinima(minima);
     min.SetMaxima(maxima);
@@ -176,6 +176,8 @@ function(){
     result.Print();
     ParameterDict bestResult = result.GetBestFit();
 
+    std::vector< std::pair<double,double> > thisisit = min.GetContour(&lh,"gaus_a_1","gaus_b_2", 0.5);
+    std::cout << "thisisit.size() : "<<thisisit.size() << std::endl;
     // Plot Result
     {
         BinnedED BiHolder = mcPdfs.at(0);

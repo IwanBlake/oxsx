@@ -1,9 +1,12 @@
 #include <Minuit.h>
 #include <Minuit2/MnMigrad.h>
 #include <Minuit2/MnMinimize.h>
+#include <Minuit2/MnPrint.h>
+#include <Minuit2/MnPlot.h>
 #include <Minuit2/MnSimplex.h>
 #include <Minuit2/MnUserParameters.h>
 #include <Minuit2/MnUserCovariance.h>
+#include <Minuit2/MnContours.h>
 #include <FitResult.h>
 #include <Exceptions.h>
 #include <Formatter.hpp>
@@ -70,6 +73,7 @@ Minuit::GetMinima() const {return fMinima;}
 
 void 
 Minuit::Initialise(TestStatistic * testStat_){
+    std::cout << "Start of changes." << std::endl;
     delete fMinimiser;
     fMinimiser = NULL;
 
@@ -114,7 +118,17 @@ Minuit::Initialise(TestStatistic * testStat_){
 
 
     // Create parameters and set limits
-    MnUserParameters params(GetValues(fInitialValues, fParameterNames), GetValues(fInitialErrors, fParameterNames));
+    // MnUserParameters params(GetValues(fInitialValues, fParameterNames), GetValues(fInitialErrors, fParameterNames));
+    MnUserParameters params;
+
+    // std::vector<double> initValues = GetValues(fInitialValues, fParameterNames);
+    // std::vector<double> initErrors = GetValues(fInitialErrors, fParameterNames);
+    // std::vector<std::string> names  = GetValues(fParameterNames);
+    for (ParameterDict::const_iterator i = fInitialValues.begin(); i != fInitialValues.end(); ++i) {
+      std::cout << i->first <<" "<<fInitialValues.at(i->first)<<" "<<fInitialErrors.at(i->first) << std::endl;
+      params.Add(i->first.c_str(),fInitialValues.at(i->first),fInitialErrors.at(i->first));
+    }
+    std::cout << "after names" << std::endl;
 
     if(fMinima.size() && fMaxima.size()){
         int i = 0;
@@ -123,6 +137,7 @@ Minuit::Initialise(TestStatistic * testStat_){
             params.SetLimits(i++, fMinima[*it], fMaxima[*it]);
         }
     }
+    std::cout << "after limits" << std::endl;
 
     if("Migrad" == fMethod)
         fMinimiser = new MnMigrad(fMinuitFCN, params);
@@ -160,7 +175,9 @@ Minuit::GetMaxCalls() const {
 
 const FitResult&
 Minuit::Optimise(TestStatistic* testStat_){
+    std::cout << "problem" << std::endl;
     testStat_ -> RegisterFitComponents();
+    std::cout << "problem2" << std::endl;
 
     Initialise(testStat_);
 
@@ -179,7 +196,7 @@ Minuit::Optimise(TestStatistic* testStat_){
     }
 
     // defaults are same as ROOT defaults
-    ROOT::Minuit2::FunctionMinimum fnMin  = fMinimiser -> operator()(fMaxCalls, fTolerance);
+    fnMin = fMinimiser -> operator()(fMaxCalls, fTolerance);
 
     fFitResult.SetBestFit(ContainerTools::CreateMap(fParameterNames, fMinimiser -> Params()));
     fFitResult.SetValid(fnMin.IsValid());
@@ -192,6 +209,8 @@ Minuit::Optimise(TestStatistic* testStat_){
     DenseMatrix covarianceMatrix = CalcCovarianceMatrix(fnMin);
 
     fFitResult.SetCovarianceMatrix(covarianceMatrix);
+
+    fIsOptimised = true;
 
     return fFitResult;
 }
@@ -221,4 +240,30 @@ Minuit::CalcCovarianceMatrix(ROOT::Minuit2::FunctionMinimum functionMin) {
     DenseMatrix minCovarianceMatrix (noRows, noRows);
     minCovarianceMatrix.SetSymmetricMatrix(minCovarianceVector);
     return minCovarianceMatrix;
+}
+
+std::vector<std::pair<double,double> > 
+Minuit::GetContour(TestStatistic* testStat_, const std::string& parx,const std::string& pary, const double& upperContour){
+
+    if(!fIsOptimised)
+      throw LogicError("Minuit::GetContour : Tried to find contour without optermising function. See this->Optimise.");
+    // Set fMinuitFCN upper contour
+    fMinuitFCN.SetUp(upperContour);
+    Initialise(testStat_);
+
+    // ROOT::Minuit2::FunctionMinimum fnMin = fMinimiser -> operator()(fMaxCalls, fTolerance);
+    ROOT::Minuit2::MnPrint printer;
+    std::cout <<fnMin<<std::endl;
+    ROOT::Minuit2::MnContours contours(fMinuitFCN,fnMin);
+    
+    std::cout << "here" << std::endl;
+    std::vector<std::pair<double,double> > cont = contours(fMinimiser ->Index(parx.c_str()),fMinimiser ->Index(pary.c_str()), 20);
+    std::cout << "there" << std::endl;
+    // std::vector<std::pair<double,double> > cont = contours(0, 1, 20);
+    ROOT::Minuit2::MnPlot plot;
+    // cont.insert(cont.end(), cont4().begin(), cont4().end());
+    plot(fnMin.UserState().Value(parx.c_str()), fnMin.UserState().Value(pary.c_str()), cont);
+    return cont;
+
+
 }
