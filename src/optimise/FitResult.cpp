@@ -41,6 +41,7 @@ FitResult::operator=(const FitResult& other_){
         fStatSpace = new Histogram(*other_.fStatSpace);
     fIsValid = other_.fIsValid;
     fBestFit = other_.fBestFit;
+    fErrors = other_.fErrors;
     fExtremeVal = other_.fExtremeVal;
     fStatSample = other_.fStatSample;
     f1DProjections = other_.f1DProjections;
@@ -57,6 +58,7 @@ FitResult::FitResult(const FitResult& other_){
         fStatSpace = new Histogram(*other_.fStatSpace);
     fStatSample = other_.fStatSample;
     fBestFit = other_.fBestFit;
+    fErrors = other_.fErrors;
     fIsValid = other_.fIsValid;
     fExtremeVal = other_.fExtremeVal;
     f1DProjections = other_.f1DProjections;
@@ -130,6 +132,16 @@ FitResult::AsString() const{
        << std::endl;
   }
   return ss.str();
+}
+
+void
+FitResult::SetErrors(const ParameterDict& err_){ 
+  fErrors= err_;
+}
+
+ParameterDict
+FitResult::GetErrors(){
+  return fErrors;
 }
 
 void 

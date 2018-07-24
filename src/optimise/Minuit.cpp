@@ -175,9 +175,7 @@ Minuit::GetMaxCalls() const {
 
 const FitResult&
 Minuit::Optimise(TestStatistic* testStat_){
-    std::cout << "problem" << std::endl;
     testStat_ -> RegisterFitComponents();
-    std::cout << "problem2" << std::endl;
 
     Initialise(testStat_);
 
@@ -199,6 +197,7 @@ Minuit::Optimise(TestStatistic* testStat_){
     fnMin = fMinimiser -> operator()(fMaxCalls, fTolerance);
 
     fFitResult.SetBestFit(ContainerTools::CreateMap(fParameterNames, fMinimiser -> Params()));
+    fFitResult.SetErrors(ContainerTools::CreateMap(fParameterNames, fMinimiser -> Errors()));
     fFitResult.SetValid(fnMin.IsValid());
 
     if(fMaximising)

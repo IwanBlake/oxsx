@@ -56,6 +56,7 @@ class Histogram{
     void Divide(const Histogram&);
     
     std::vector<std::string> GetAxisNames() const;
+    int GetDim(const std::string&) const;
     
  private:
     AxisCollection fAxes;

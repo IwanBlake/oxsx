@@ -43,6 +43,9 @@ fnMin(ROOT::Minuit2::MinimumSeed(ROOT::Minuit2::MinimumState(2),ROOT::Minuit2::M
     std::vector< std::pair<double,double> > 
     GetContour(TestStatistic* testStat_,const std::string&,const std::string&, const double&);
 
+    void SetErrors(ParameterDict& err_){fErrors= err_;}
+    ParameterDict GetErrors(){return fErrors;}
+
     void SetMethod(const std::string&);
     std::string GetMethod() const;
 
@@ -78,6 +81,7 @@ fnMin(ROOT::Minuit2::MinimumSeed(ROOT::Minuit2::MinimumState(2),ROOT::Minuit2::M
 
     ParameterDict fMinima;
     ParameterDict fMaxima;
+    ParameterDict fErrors;
     std::set<std::string>    fFixedParameters;
 
     unsigned fMaxCalls;

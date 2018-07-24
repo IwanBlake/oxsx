@@ -254,3 +254,8 @@ std::vector<std::string>
 Histogram::GetAxisNames() const{
     return fAxes.GetAxisNames();
 }
+
+int 
+Histogram::GetDim(const std::string& name_) const{
+  return fAxes.GetDim(name_);
+}
