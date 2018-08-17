@@ -41,12 +41,26 @@ BinnedEDManager::BinProbability(size_t bin_) const{
     return sum;
 }
 
-
 void
 BinnedEDManager::SetNormalisations(const std::vector<double>& normalisations_){
     if (normalisations_.size() != fOriginalPdfs.size())
         throw LogicError("BinnedEDManager: number of norms doesn't match #pdfs");
     fNormalisations = normalisations_;
+}
+
+void
+BinnedEDManager::ApplyOscillations(){
+    // If there are no oscillation parameters defined don't do anything
+    //  ( then, working pdfs = original pdfs from initialisation)
+    
+    // get parameters
+    
+
+    // do oscillations here... modify this code
+    for(size_t j = 0; j < fOriginalPdfs.size(); j++){
+        fWorkingPdfs[j] = fOriginalPdfs.at(j);
+        fWorkingPdfs[j].SetBinContents(sysMan_.GetTotalResponse().operator()(fOriginalPdfs.at(j).GetBinContents()));
+    }
 }
 
 void
