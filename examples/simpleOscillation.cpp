@@ -2,6 +2,7 @@
 #include <BinnedED.h>
 #include <ROOTNtuple.h>
 #include <BinnedNLLH.h>
+#include <BinnedOscNLLH.h>
 #include <Minuit.h>
 #include <ParameterDict.h>
 
@@ -67,6 +68,7 @@ int main(){
     // 3. Set Up LH function & fit parameters  //
     /////////////////////////////////////////////
     BinnedNLLH lhFunction;
+	//BinnedOscNLLH lhFunction;
     lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
     lhFunction.AddPdf(bgPdf);
     lhFunction.AddPdf(signalPdf);
@@ -84,18 +86,13 @@ int main(){
 	ParameterDict initVals;
 	initVals["bgPdf_norm"]= 20000;
 	initVals["signalPdf_norm"]= 40000;
+	//initVals["delta_msqr_21"]  = 7.4e-5;
+    //initVals["sinsqr_theta_12"]= 0.297;
+    //initVals["sinsqr_theta_13"]= 0.0215;
 
 	ParameterDict initErrs;
 	initErrs["bgPdf_norm"]= 1480;
 	initErrs["signalPdf_norm"]= 2730;
-	
-    // apply oscillation to events
-    // ParameterDict oscillation_values;
-    // oscillation_parameters["delta_msqr_21"]  = 7.4e-5;
-    // oscillation_parameters["sinsqr_theta_12"]= 0.297;
-    // oscillation_parameters["sinsqr_theta_13"]= 0.0215;
-    // lhFunction.SetParameters(oscillation_values);
-	
 
 	////////////
     // 4. Fit //
