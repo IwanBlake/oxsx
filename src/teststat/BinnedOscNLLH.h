@@ -13,9 +13,9 @@
 #include <vector>
 
 class DataSet;
-class BinnedNLLH : public TestStatistic{
+class BinnedOscNLLH : public TestStatistic{
  public:
-    BinnedNLLH() : fCalculatedDataDist(false), fAlreadyShrunk(false), fDataSet(NULL), fSignalCutEfficiency(1){}
+    BinnedOscNLLH() : fCalculatedDataDist(false), fAlreadyShrunk(false), fDataSet(NULL), fSignalCutEfficiency(1){}
 
     void   SetPdfManager(const BinnedEDManager&);
     void   SetSystematicManager(const SystematicManager&);
@@ -27,7 +27,7 @@ class BinnedNLLH : public TestStatistic{
     void   AddSystematics(const std::vector<Systematic*>);
 
     void   SetConstraint(const std::string& paramName_, double mean_, double sigma_);
-    
+
     void SetNormalisations(const std::vector<double>& norms_);
     std::vector<double> GetNormalisations() const;
 
@@ -54,12 +54,16 @@ class BinnedNLLH : public TestStatistic{
     void   SetSignalCutLog(const CutLog&);
 
     // Test statistic interface
-    void RegisterFitComponents(); 
+    void RegisterFitComponents();
     void SetParameters(const ParameterDict&);
     ParameterDict GetParameters() const;
     int  GetParameterCount() const;
     std::set<std::string> GetParameterNames() const;
     double Evaluate();
+
+	double NuSurvProb(double nuE, double baseline, double delmsqr21, double sinsqrtheta12, double sinsqrtheta13);
+
+	void ntOscillate( const char* ntin, const char* ntout, double delmsqr21, double sinsqrtheta12, double sinsqrtheta13);
 
  private:
     BinnedEDManager      fPdfManager;
@@ -75,6 +79,6 @@ class BinnedNLLH : public TestStatistic{
     BinnedED         fDataDist;
     bool             fCalculatedDataDist;
     bool             fAlreadyShrunk;
-    ComponentManager fComponentManager;    
+    ComponentManager fComponentManager;
 };
 #endif

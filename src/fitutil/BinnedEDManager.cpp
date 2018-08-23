@@ -57,10 +57,10 @@ BinnedEDManager::ApplyOscillations(){
     
 
     // do oscillations here... modify this code
-    for(size_t j = 0; j < fOriginalPdfs.size(); j++){
-        fWorkingPdfs[j] = fOriginalPdfs.at(j);
-        fWorkingPdfs[j].SetBinContents(sysMan_.GetTotalResponse().operator()(fOriginalPdfs.at(j).GetBinContents()));
-    }
+    // for(size_t j = 0; j < fOriginalPdfs.size(); j++){
+        // fWorkingPdfs[j] = fOriginalPdfs.at(j);
+        // fWorkingPdfs[j].SetBinContents(sysMan_.GetTotalResponse().operator()(fOriginalPdfs.at(j).GetBinContents()));
+    // }
 }
 
 void

@@ -7,7 +7,7 @@
 
 const std::string bgMCfile    = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b.root";
 const std::string sigMCfile   = "/data/snoplus/lidgard/OXSX/OXSXntp/3CADReactorScintFit10Day.root";
-const std::string bgTreeName  = "nt";
+const std::string bgTreeName  = "output";
 const std::string sigTreeName = "nt";
 
 const std::string dataFile = "/data/snoplus/lidgard/OXSX/OXSXntp/3CADReactorScintFit10DayOscillated.root";

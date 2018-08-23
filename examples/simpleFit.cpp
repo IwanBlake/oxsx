@@ -5,13 +5,13 @@
 #include <GridSearch.h>
 #include <ParameterDict.h>
 
-const std::string bgMCfile    = "";
-const std::string sigMCfile   = "";
-const std::string bgTreeName  = "";
-const std::string sigTreeName = "";
+const std::string bgMCfile    = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_2n2b.root";
+const std::string sigMCfile   = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b-partB.root";
+const std::string bgTreeName  = "output";
+const std::string sigTreeName = "output";
 
-const std::string dataFile = "";
-const std::string dataTreeName = "";
+const std::string dataFile = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b-partA.root";
+const std::string dataTreeName = "output";
 
 int main(){
     ////////////////////

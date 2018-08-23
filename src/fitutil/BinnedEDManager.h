@@ -46,6 +46,8 @@ class BinnedEDManager : public FitComponent{
 
     std::string GetName() const;
     void SetName(const std::string&);
+	
+	void ApplyOscillations();
 
 
  private:
