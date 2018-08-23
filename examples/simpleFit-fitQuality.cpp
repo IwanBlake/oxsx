@@ -1,97 +1,72 @@
-#include <ROOTNtuple.h>
-#include <BinAxis.h>
-#include <AxisCollection.h>
 #include <BinnedED.h>
-#include <DataSet.h>
-#include <vector>
-#include <string>
-#include <iostream>
-#include <Event.h>
-#include <DistFiller.h>
-#include <BoolCut.h>
-#include <CutCollection.h>
-#include <DataSetGenerator.h>
-#include <OXSXDataSet.h>
-#include <IO.h>
-#include <Rand.h>
+#include <ROOTNtuple.h>
 #include <BinnedNLLH.h>
-#include <BinnedEDManager.h>
+#include <ParameterDict.h>
+#include <Rand.h>
 #include <TH1D.h>
-#include <TRandom3.h>
 #include <Minuit.h>
 
 ParameterDict maximumlikelihood(BinnedED bgPdf, BinnedED signalPdf, BinnedED dataSetPdf ){
-	
-    //Comment this if I want to check I get the same data.
-    Rand::SetSeed(0);
 
-    BinnedNLLH lh;
-    lh.SetDataDist(dataSetPdf);
-    lh.AddPdf(bgPdf);
-	lh.AddPdf(signalPdf);
+    Rand::SetSeed(0); //Comment this if I want to check I get the same data.
 
-	ParameterDict values;
-	values["minima"]= 0;
-	values["maxima"]= 10000;
-	values["steps"]= 2;
+	// Set Up LH function  
+    BinnedNLLH lhFunction;
+    lhFunction.SetDataDist(dataSetPdf);
+    lhFunction.AddPdf(bgPdf);
+	lhFunction.AddPdf(signalPdf);
+
+	// set fit parameter limits
+	ParameterDict minima;
+	minima["bgPdf_norm"]= 0;
+	minima["signalPdf_norm"]= 0;
+
+	ParameterDict maxima;
+	maxima["bgPdf_norm"]= 100000;
+	maxima["signalPdf_norm"]= 100000;
 
 	ParameterDict initVals;
-	initVals["bgHist_norm"]= 20000;
-	initVals["sigHist_norm"]= 40000;
+	initVals["bgPdf_norm"]= 20000;
+	initVals["signalPdf_norm"]= 40000;
 
 	ParameterDict initErrs;
-	initErrs["bgHist_norm"]= 1480;
-	initErrs["sigHist_norm"]= 2730;
+	initErrs["bgPdf_norm"]= 1480;
+	initErrs["signalPdf_norm"]= 2730;
 
-	//ParameterDict expectedRates;
-	//expectedRates["vals"]= 14889;
-	//expectedRates["vals"]= 27323;
+	ParameterDict expectedRates;
+	expectedRates["bgPdf_norm"]= 14889;
+	expectedRates["signalPdf_norm"]= 27323;
 
+	// Setup and run the minimiser
     Minuit min;
     min.SetInitialValues(initVals);
     min.SetInitialErrors(initErrs);
-	//min.SetMinima(values);
-    //min.SetMaxima(values);
+	min.SetMinima(minima);
+    min.SetMaxima(maxima);
 
-    min.Optimise(&lh);
+    min.Optimise(&lhFunction);
 
     FitResult fitResult = min.GetFitResult();
-
     ParameterDict bestFit = fitResult.GetBestFit();
     fitResult.Print();
 
-
-    /////***** Checking what the likelihood looks like *****/////
-
-    lh.SetParameters(bestFit);
-    std::cout << "Likelihood value at best fit point" << lh.Evaluate() << std::endl;
-
-    //lh.SetParameters(expectedRates);
-    //std::cout << "Likelihood value at expected rate point" << lh.Evaluate() << std::endl;
+    // Check what the likelihood looks like
+    lhFunction.SetParameters(bestFit);
+    std::cout << "Likelihood value at best fit point: " << lhFunction.Evaluate() << std::endl;
+    lhFunction.SetParameters(expectedRates);
+    std::cout << "Likelihood value at expected rate point: " << lhFunction.Evaluate() << std::endl;
 
     return(bestFit);
 }
 
-int main()
-{
+int main(){
 	Rand::SetSeed(0);
 
-	// Load data and make PDF's
-	//const Histogram bgHist = IO::LoadHistogram("/data/snoplus/turnere/OXSX_HighStats/PDFs/JustRopes_SixMonthsBi214AvAndBothDustsPdf_ValidFit_2E3_058r077.hdf5");
-	//const Histogram sigHist = IO::LoadHistogram("/data/snoplus/turnere/OXSX_HighStats/PDFs/JustRopes_SixMonthsTl208AvAndBothDustsPdf_ValidFit_2E3_058r077.hdf5");
-	//BinnedED bgPdf("bgHist",bgHist);
-	//BinnedED sigPdf("sigHist",sigHist);
-	//const Histogram dataSetHist = IO::LoadHistogram("/data/snoplus/turnere/OXSX_HighStats/FakeDataSets/JustRopes_SixMonthsFakeDataSetPdf_ValidFit_2E3_058r077.hdf5");
-	//BinnedED dataSetPdf("dataHist",dataSetHist);
-	////
-	
-	TH1D bgRateHist("bgRateHist", "bgRateHist", 1000, -10000.0, 50000.0);
-	TH1D sigRateHist("sigRateHist", "sigRateHist", 1000, -10000.0, 50000.0);
-
+	// data (ntuples) to load
 	const std::string bgMCfile    = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_2n2b.root";
-	const std::string sigMCfile   = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b-partB.root";
+	const std::string signalMCfile   = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b-partB.root";
 	const std::string bgTreeName  = "output";
-	const std::string sigTreeName = "output";
+	const std::string signalTreeName = "output";
 
 	const std::string dataFile = "/data/snoplus/lidgard/OXSX/ntp/TeLoadedTe130_0n2b-partA.root";
 	const std::string dataTreeName = "output";
@@ -104,56 +79,54 @@ int main()
     ObsSet dataRep(0);
 
     // Set up pdf with these bins in this observable
-    BinnedED bgPdf("bgHist",axes);
-    bgPdf.SetObservables(dataRep);
-    BinnedED  sigPdf("sigHist",axes);
-    sigPdf.SetObservables(dataRep);
+    BinnedED bgPdf("bgPdf",axes);
+	BinnedED  signalPdf("signalPdf",axes);
+	BinnedED  dataSetPdf("dataSetPdf",axes);
+    
+	bgPdf.SetObservables(dataRep);
+    signalPdf.SetObservables(dataRep);
+    dataSetPdf.SetObservables(dataRep);
 
 	ROOTNtuple bgMCNtp(bgMCfile, bgTreeName);
-    ROOTNtuple sigMCNtp(sigMCfile, sigTreeName);
+    ROOTNtuple signalMCNtp(signalMCfile, signalTreeName);
+	ROOTNtuple dataNtp(dataFile, dataTreeName);
 
-    for(size_t i = 0; i < bgMCNtp.GetNEntries(); i++){
+	// Fill with data
+    for(size_t i = 0; i < bgMCNtp.GetNEntries(); i++)
         bgPdf.Fill(bgMCNtp.GetEntry(i));
-    }
-    for(size_t i = 0; i < sigMCNtp.GetNEntries(); i++){
-        sigPdf.Fill(sigMCNtp.GetEntry(i));
-    }
+    for(size_t i = 0; i < signalMCNtp.GetNEntries(); i++)
+        signalPdf.Fill(signalMCNtp.GetEntry(i));
+	for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
+        dataSetPdf.Fill(dataNtp.GetEntry(i));
 
 	bgPdf.Normalise();
-    sigPdf.Normalise();
-	
-	BinnedED  dataSetPdf("dataSetPdf",axes);
-    dataSetPdf.SetObservables(dataRep);
-	
-	ROOTNtuple dataNt(dataFile, dataTreeName);
-	for(size_t i = 0; i < dataNt.GetNEntries(); i++){
-        dataSetPdf.Fill(dataNt.GetEntry(i));
-    }
+    signalPdf.Normalise();
 
-	int noOfExperiments = 50;
+	// run fitting a number of times to check the fit results are normally distributed
+	int noOfExperiments = 100;
 	int noOfBins = dataSetPdf.GetNBins();
+	TH1D bgRateHist("bgRateHist", "bgRateHist", 1000, -10000.0, 50000.0);
+	TH1D signalRateHist("signalRateHist", "signalRateHist", 1000, -10000.0, 50000.0);
 
 	for (int j = 0; j < noOfExperiments; j++){
-		for (int i = 0; i < noOfBins; i++){
-		  dataSetPdf.SetBinContent(i, Rand::Poisson(dataSetPdf.GetBinContent(i)));
-		}
+		for (int i = 0; i < noOfBins; i++)
+		  dataSetPdf.SetBinContent(i, Rand::Poisson(dataSetPdf.GetBinContent(i))); // adds some noise
 
 		std::cout << "Total number of events in fake data PDF " << dataSetPdf.Integral() << std::endl;
-		ParameterDict bestFit = maximumlikelihood(bgPdf, sigPdf, dataSetPdf);
+		ParameterDict bestFit = maximumlikelihood(bgPdf, signalPdf, dataSetPdf); // do the fitting
 
 		std::cout << "Best Fit Values: " << std::endl;
-		for(ParameterDict::const_iterator it = bestFit.begin(); it != bestFit.end(); ++it){
+		for(ParameterDict::const_iterator it = bestFit.begin(); it != bestFit.end(); ++it){ // print out results
 			std::cout << "Parameter name: " << it->first << "\tParameter Value: " << it->second << std::endl;
 
-			if (it->first=="bgHist_norm")
-				bgRateHist.Fill(it->second);
-			if (it->first=="sigHist_norm")
-				sigRateHist.Fill(it->second);
+			if (it->first=="bgPdf_norm")
+				bgRateHist.Fill(it->second); // histogram results
+			if (it->first=="signalPdf_norm")
+				signalRateHist.Fill(it->second);
 		}
 	}
 
-  //bgRateHist.SaveAs("/data/snoplus/lidgard/OXSX/JustRopes_Bi214AllExceptRopesRates_ValidFit_2E3_058r077.root");
-  //sigRateHist.SaveAs("/data/snoplus/lidgard/OXSX/JustRopes_Tl208AllExceptRopesRates_ValidFit_2E3_058r077.root");
-  bgRateHist.SaveAs("/data/snoplus/lidgard/OXSX/0n.root");
-  sigRateHist.SaveAs("/data/snoplus/lidgard/OXSX/2n.root");
+	//save results
+	bgRateHist.SaveAs("/data/snoplus/lidgard/OXSX/0n.root");
+	signalRateHist.SaveAs("/data/snoplus/lidgard/OXSX/2n.root");
 }
