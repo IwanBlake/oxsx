@@ -20,7 +20,7 @@ BinnedEDManager::Probability(const Event& data_) const{
     double sum = 0;
 
     for(size_t i = 0; i < fWorkingPdfs.size(); i++){
-        sum += fNormalisations.at(i) * fWorkingPdfs[i].Probability(data_);
+        sum += fParameters.at(i) * fWorkingPdfs[i].Probability(data_);
     }
 
     return sum;
@@ -31,7 +31,7 @@ BinnedEDManager::BinProbability(size_t bin_) const{
     double sum = 0;
     try{
         for(size_t i = 0; i < fWorkingPdfs.size(); i++){
-            sum += fNormalisations.at(i) * fWorkingPdfs.at(i).GetBinContent(bin_);
+            sum += fParameters.at(i) * fWorkingPdfs.at(i).GetBinContent(bin_);
 
         }
     }
@@ -45,7 +45,7 @@ void
 BinnedEDManager::SetNormalisations(const std::vector<double>& normalisations_){
     if (normalisations_.size() != fOriginalPdfs.size())
         throw LogicError("BinnedEDManager: number of norms doesn't match #pdfs");
-    fNormalisations = normalisations_;
+    fParameters = normalisations_;
 }
 
 void
@@ -82,38 +82,44 @@ BinnedEDManager::GetOriginalPdf(size_t index_) const{
     return fOriginalPdfs.at(index_);
 }
 
-void
-BinnedEDManager::AddPdf(const BinnedED& pdf_){
-	AddPdf("normalisation", pdf_);
-}
+// void
+// BinnedEDManager::AddPdf(const BinnedED& pdf_){
+	// AddPdf("norm", pdf_);
+// }
 
 void
 BinnedEDManager::AddPdf(const std::string& type_, const BinnedED& pdf_){
-	fParameterTypes.push_back(type_);
-    fOriginalPdfs.push_back(pdf_);
-    fWorkingPdfs.push_back(pdf_);
-    fNPdfs++;
-	if (type_=="normalisation")
-		fNormalisations.resize(fOriginalPdfs.size(), 0);
-	if (type_=="oscillation"){
-		fOscillationsP1.resize(fOriginalPdfs.size(), 0);
-		fOscillationsP2.resize(fOriginalPdfs.size(), 0);
-		fOscillationsP3.resize(fOriginalPdfs.size(), 0);
+	if (type_=="norm"){
+		fParameters.push_back(0);
+		fParameterTypes.push_back(type_);
+		fOriginalPdfs.push_back(pdf_);
+		fWorkingPdfs.push_back(pdf_);
+		fNPdfs++;
+		RegisterParameters(type_);
 	}
-    RegisterParameters(type_);
+	if (type_=="osc"){
+		for (int i=0; i<3; i++){ //push back all vectors for the number of neutrino oscillation parameters
+			fParameters.push_back(0);
+			fParameterTypes.push_back(type_);
+			fOriginalPdfs.push_back(pdf_);
+			fWorkingPdfs.push_back(pdf_);
+			fNPdfs++;
+		}
+		RegisterParameters(type_);
+	}
 }
 
-void
-BinnedEDManager::AddPdfs(const std::vector<BinnedED>& pdfs_){
-    for(size_t i = 0; i < pdfs_.size(); i++){
-        AddPdf(pdfs_.at(i));
-    }
-    RegisterParameters();
-}
+// void
+// BinnedEDManager::AddPdfs(const std::vector<BinnedED>& pdfs_){
+    // for(size_t i = 0; i < pdfs_.size(); i++){
+        // AddPdf(pdfs_.at(i));
+    // }
+    // RegisterParameters();
+// }
 
 const std::vector<double>&
 BinnedEDManager::GetNormalisations() const{
-    return fNormalisations;
+    return fParameters;
 }
 
 void
@@ -181,31 +187,27 @@ BinnedEDManager::GetParameterNames() const{
     return fParameterManager.GetParameterNames();
 }
 
-void
-BinnedEDManager::RegisterParameters(){
-	RegisterParameters("normalisation");
-}
+// void
+// BinnedEDManager::RegisterParameters(){
+	// RegisterParameters("norm");
+// }
 
 void
 BinnedEDManager::RegisterParameters(const std::string& type_){
     fParameterManager.Clear();
 	std::vector<std::string> parameterNames;
-    std::vector<std::string> parameterNamesP1;
-	std::vector<std::string> parameterNamesP2;
-	std::vector<std::string> parameterNamesP3;
     for(size_t i = 0; i < fOriginalPdfs.size(); i++){
-		if (fParameterTypes.at(i)=="normalisation")
+		if (fParameterTypes.at(i)=="norm"){
 			parameterNames.push_back(fOriginalPdfs.at(i).GetName() + "_norm");
-		if (fParameterTypes.at(i)=="oscillation"){
-			parameterNamesP1.push_back(fOriginalPdfs.at(i).GetName() +"_delmsqr21");
-			parameterNamesP2.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta12");
-			parameterNamesP3.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta13");
+			std::cout << "here norm i: " << i << " fParameterTypes.at(i): " << fParameterTypes.at(i) << std::endl;
+		}
+		if (fParameterTypes.at(i)=="osc"){
+			std::cout << "here osc i: " << i << " fParameterTypes.at(i): " << fParameterTypes.at(i) << std::endl;
+			parameterNames.push_back(fOriginalPdfs.at(i).GetName() +"_delmsqr21");
+			parameterNames.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta12");
+			parameterNames.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta13");
+			i=i+2;
 		}
 	}
-	if (type_=="normalisation")
-		fParameterManager.AddContainer(fNormalisations, parameterNames);
-	if (type_=="oscillation")
-		fParameterManager.AddContainer(fOscillationsP1, parameterNamesP1);
-		fParameterManager.AddContainer(fOscillationsP2, parameterNamesP2);
-		fParameterManager.AddContainer(fOscillationsP3, parameterNamesP3);
+	fParameterManager.AddContainer(fParameters, parameterNames);
 }

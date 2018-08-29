@@ -11,6 +11,7 @@ void
 ComponentManager::AddComponent(FitComponent*  componentPtr_){
     fComponents.push_back(componentPtr_);
     fComponentCount++;
+	std::cout<< "--------------------------here: " << fComponentCount << std::endl;
 }
 
 void 
@@ -19,8 +20,10 @@ ComponentManager::SetParameters(const ParameterDict& params_){
         return;
 
     // let them each take what they need, they'll complain if something is missing
-    for(size_t i = 0; i < fComponents.size(); i++)
+    for(size_t i = 0; i < fComponents.size(); i++){
         fComponents[i]->SetParameters(params_);
+		//std::cout << "------------------------------------------i : " << i << "params: " << ToString(GetKeys(params_)) << std::endl;
+	}
 }
 
 ParameterDict

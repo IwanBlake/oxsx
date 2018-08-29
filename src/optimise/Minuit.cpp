@@ -112,6 +112,12 @@ Minuit::Initialise(TestStatistic * testStat_){
     if(fMaximising)
         fMinuitFCN.SetSignFlip(true);
 
+	// std::cout << "fParameterNames: " << std::endl;
+	// for (int i=0; i<fParameterNames.size(); ++i){
+		// std::cout << "param names" << i << ":" << ToString(fParameterNames) << std::endl;
+	// }
+	// std::cout << "---fInitialValues: " << ToString(GetKeys(fInitialValues)) << std::endl;
+	// std::cout << "---fInitialErrors: " << ToString(GetKeys(fInitialErrors)) << std::endl;
 
     // Create parameters and set limits
     MnUserParameters params(GetValues(fInitialValues, fParameterNames), GetValues(fInitialErrors, fParameterNames));
@@ -164,10 +170,11 @@ Minuit::Optimise(TestStatistic* testStat_){
 
     Initialise(testStat_);
 
+	std::cout << "TestStatistic: " << ToString(testStat_->GetParameterNames()) << std::endl;
     if(testStat_->GetParameterNames() != fParameterNames)
         throw LogicError(Formatter() << "Minuit config parameters don't match the test statistic!\n" 
-                         << "TestStatistic:\n" << ToString(testStat_->GetParameterNames()) 
-                         << "Minuit:\n" << ToString(fParameterNames)
+                         << "TestStatistic: " << ToString(testStat_->GetParameterNames()) 
+                         << "\nMinuit: " << ToString(fParameterNames)
                          );
 
     // fix the requested parameters

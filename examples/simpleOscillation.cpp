@@ -62,9 +62,9 @@ int main(){
     BinnedNLLH lhFunction;
 	//BinnedOscNLLH lhFunction;
     lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
-    lhFunction.AddPdf("normalisation", bgPdf);  //const std::string& name_,
-    lhFunction.AddPdf("normalisation", signalPdf);
-	lhFunction.AddPdf("oscillation", signalPdf);
+    lhFunction.AddPdf(bgPdf);  //const std::string& name_,
+    lhFunction.AddPdf("norm", signalPdf);
+	lhFunction.AddPdf("osc", signalPdf);
     std::cout << "Built LH function " << std::endl;
 
 	// set fit parameter limits

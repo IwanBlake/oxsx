@@ -16,9 +16,9 @@ class BinnedEDManager : public FitComponent{
  public:
     BinnedEDManager() : fNPdfs(0), fName("norms") {}
 
-	void   AddPdf(const BinnedED&);
+	//void   AddPdf(const BinnedED&);
     void   AddPdf(const std::string&, const BinnedED&);
-    void   AddPdfs(const std::vector<BinnedED>&);
+    //void   AddPdfs(const std::vector<BinnedED>&);
 
     double Probability(const Event&) const;
     double BinProbability(size_t) const;
@@ -54,10 +54,7 @@ class BinnedEDManager : public FitComponent{
     ParameterManager       fParameterManager;
     std::vector<BinnedED>  fOriginalPdfs;
     std::vector<BinnedED>  fWorkingPdfs;
-    std::vector<double>    fNormalisations;
-	std::vector<double>    fOscillationsP1;
-	std::vector<double>    fOscillationsP2;
-	std::vector<double>    fOscillationsP3;
+    std::vector<double>    fParameters;
     int                    fNPdfs;
     size_t fNDims;
 

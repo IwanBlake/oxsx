@@ -19,6 +19,7 @@ template<typename Container>
 void  
 ParameterManager::AddContainer(Container& cntr_, 
                                const std::vector<std::string>& names_){
+    std::cout << "size" << cntr_.size() << " j" <<  names_.size() << std::endl;
     if(cntr_.size() != names_.size())
         throw DimensionError("ParameterManager::AddContainer", cntr_.size(),
                              names_.size(), "#names doesn't match #parameters");

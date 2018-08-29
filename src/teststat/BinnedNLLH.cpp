@@ -73,12 +73,12 @@ BinnedNLLH::SetSystematicManager(const SystematicManager& man_){
 
 void
 BinnedNLLH::AddPdf(const BinnedED& pdf_){
-    fPdfManager.AddPdf("normalisation", pdf_);
+    AddPdf("norm", pdf_);
 }
 
 void
 BinnedNLLH::AddPdf(const std::string& name_, const BinnedED& pdf_){
-    fPdfManager.AddPdf(pdf_);
+    fPdfManager.AddPdf(name_, pdf_);
 }
 
 void
@@ -203,6 +203,7 @@ void
 BinnedNLLH::SetParameters(const ParameterDict& params_){
     try{
         fComponentManager.SetParameters(params_);
+		//std::cout<< "--------------------------here" << std::endl;
     }
     catch(const ParameterError& e_){
         throw ParameterError(std::string("BinnedNLLH::") + e_.what());

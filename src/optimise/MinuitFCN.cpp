@@ -1,11 +1,15 @@
 #include <MinuitFCN.h>
 
+using ContainerTools::GetKeys;
+using ContainerTools::ToString;
+
 double
 MinuitFCN::operator()(const std::vector<double>& paramVals_) const {
     if(!pTestStatistic)
         throw NULLPointerAccessError("Minuit is trying to optimise a NULL TestStatistic* !");
 
     ContainerTools::SetValues(fSetParameters, fParameterNames, paramVals_);
+	//std::cout << "fSetParameters: " << ToString(GetKeys(fSetParameters)) << "\n"; 
     pTestStatistic->SetParameters(fSetParameters);
     if(fFlipSign)
             return -1 * pTestStatistic->Evaluate();
