@@ -19,14 +19,14 @@ class BinnedED : public EventDistribution{
     BinnedED() {}
     BinnedED(const std::string& name_, const AxisCollection& axes_);
     BinnedED(const std::string& name_, const Histogram& histo_);
-    EventDistribution*   Clone() const; 
+    EventDistribution*   Clone() const;
 
     double Probability(const Event&) const;
     double Probability(const std::vector<double>&) const;
     double Integral()  const;
     void   Normalise();
     void   Scale(double s_);
-    
+
     void   Fill(const std::vector<double>& vals_, double weight_ = 1);
     void   Fill(const Event& data_, double weight_ = 1);
     void   Fill(double val_, double weight_ = 1);
@@ -40,8 +40,8 @@ class BinnedED : public EventDistribution{
     const AxisCollection& GetAxes() const;
     void  SetAxes(const AxisCollection& axes_);
 
-    std::vector<double> GetBinContents() const; 
-    void SetBinContents(const std::vector<double>& data_);     
+    std::vector<double> GetBinContents() const;
+    void SetBinContents(const std::vector<double>& data_);
 
     std::vector<double> Means() const;
     std::vector<double> Variances() const;
@@ -56,10 +56,10 @@ class BinnedED : public EventDistribution{
     void     SetBinContent(size_t bin_, double content_);
     void     Empty();
     unsigned GetNDims() const;
-        
+
     BinnedED Marginalise(const std::vector<size_t>& indices_) const;
     BinnedED Marginalise(size_t index_) const;
-    
+
     void   SetObservables(const ObsSet&);
     ObsSet GetObservables() const;
 
@@ -69,10 +69,10 @@ class BinnedED : public EventDistribution{
 
     std::string GetName() const;
     void SetName(const std::string&);
-    
+
  protected:
     ObsSet      fObservables;
     Histogram   fHistogram;
-    std::string fName;    
+    std::string fName;
 };
 #endif

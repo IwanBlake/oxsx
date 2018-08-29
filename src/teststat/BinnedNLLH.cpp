@@ -6,14 +6,14 @@
 #include <CutLog.h>
 #include <iostream>
 
-double 
+double
 BinnedNLLH::Evaluate(){
-    if(!fDataSet && !fCalculatedDataDist) 
+    if(!fDataSet && !fCalculatedDataDist)
         throw LogicError("BinnedNNLH function called with no data set and no DataDist! set one of these first");
-    
+
     if (!fCalculatedDataDist)
         BinData();
-    
+
     if(!fAlreadyShrunk){
         fDataDist = fPdfShrinker.ShrinkDist(fDataDist);
         fAlreadyShrunk = true;
@@ -34,7 +34,7 @@ BinnedNLLH::Evaluate(){
         double prob = fPdfManager.BinProbability(i);
         if(!prob)
             throw std::runtime_error("BinnedNLLH::Encountered zero probability bin!");
-        nLogLH -= fDataDist.GetBinContent(i) *  log(prob);        
+        nLogLH -= fDataDist.GetBinContent(i) *  log(prob);
     }
 
 
@@ -42,7 +42,7 @@ BinnedNLLH::Evaluate(){
     const std::vector<double>& normalisations = fPdfManager.GetNormalisations();
     for(size_t i = 0; i < normalisations.size(); i++)
         nLogLH += normalisations.at(i);
-            
+
     // Constraints
     for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
         it != fConstraints.end(); ++it)
@@ -57,7 +57,7 @@ BinnedNLLH::BinData(){
     fDataDist.Empty();
     CutLog log(fCuts.GetCutNames());
     DistFiller::FillDist(fDataDist, *fDataSet, fCuts, log);
-    fCalculatedDataDist = true;    
+    fCalculatedDataDist = true;
     fSignalCutLog = log;
 }
 
@@ -73,10 +73,15 @@ BinnedNLLH::SetSystematicManager(const SystematicManager& man_){
 
 void
 BinnedNLLH::AddPdf(const BinnedED& pdf_){
+    fPdfManager.AddPdf("normalisation", pdf_);
+}
+
+void
+BinnedNLLH::AddPdf(const std::string& name_, const BinnedED& pdf_){
     fPdfManager.AddPdf(pdf_);
 }
 
-void 
+void
 BinnedNLLH::AddSystematic(Systematic* sys_){
     fSystematicManager.Add(sys_);
 }
@@ -138,7 +143,7 @@ BinnedNLLH::AddSystematics(const std::vector<Systematic*> systematics_){
 
 
 void
-BinnedNLLH::SetNormalisations(const std::vector<double>& norms_){    
+BinnedNLLH::SetNormalisations(const std::vector<double>& norms_){
     fPdfManager.SetNormalisations(norms_);
 }
 
@@ -152,12 +157,12 @@ BinnedNLLH::AddCut(const Cut& cut_){
     fCuts.AddCut(cut_);
 }
 
-void 
+void
 BinnedNLLH::SetCuts(const CutCollection& cuts_){
     fCuts = cuts_;
 }
 
-void 
+void
 BinnedNLLH::SetConstraint(const std::string& paramName_, double mean_, double sigma_){
     fConstraints[paramName_] = QuadraticConstraint(mean_, sigma_);
 }
@@ -203,8 +208,8 @@ BinnedNLLH::SetParameters(const ParameterDict& params_){
         throw ParameterError(std::string("BinnedNLLH::") + e_.what());
     }
 }
-                                             
-                 
+
+
 ParameterDict
 BinnedNLLH::GetParameters() const{
     return fComponentManager.GetParameters();

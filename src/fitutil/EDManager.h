@@ -13,27 +13,28 @@ class EDManager : public FitComponent{
     ~EDManager(); // free pdf copies
 
     void  AddDist(EventDistribution*); // take a copy
+	void  AddDist(const std::string&, EventDistribution*);
     void  AddDists(const std::vector<EventDistribution*>& pdfs_);
 
     const std::vector<double>& GetNormalisations() const;
     void  SetNormalisations(const std::vector<double>&);
-    
+
     double Probability(const Event&) const;
-    
+
     size_t GetNDists() const;
     size_t GetNDims() const;
-    
+
     // Make a fittable component - i.e. rescale pdfs inside to fit
     void   SetParameter(const std::string& name_, double value);
     double GetParameter(const std::string& name_) const;
-    
+
     void   SetParameters(const ParameterDict&);
     ParameterDict GetParameters() const;
     size_t GetParameterCount() const;
-    
+
     std::set<std::string> GetParameterNames() const;
     void   RenameParameter(const std::string& old_, const std::string& new_);
-    
+
     std::string GetName() const;
     void SetName(const std::string&);
 
@@ -44,8 +45,16 @@ class EDManager : public FitComponent{
     size_t fNDims;
     std::vector<EventDistribution*>   fDists;
     std::vector<double> fNormalisations;
+	std::vector<double>    fOscillationsP1;
+	std::vector<double>    fOscillationsP2;
+	std::vector<double>    fOscillationsP3;
 
     std::string fName; // component name
     void RegisterParameters();
+	void RegisterParameters(const std::string&);
+
+ protected:
+	std::vector<std::string> fParameterTypes;
+
 };
 #endif

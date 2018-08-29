@@ -8,8 +8,13 @@ EDManager::~EDManager(){
         delete fDists[i];
 }
 
-void 
+void
 EDManager::AddDist(EventDistribution * pdf_){
+	AddDist("normalisation", pdf_);
+}
+
+void
+EDManager::AddDist(const std::string& type_, EventDistribution * pdf_){
     if (!fDists.size())
         fNDims = pdf_->GetNDims();
 
@@ -17,9 +22,17 @@ EDManager::AddDist(EventDistribution * pdf_){
         throw DimensionError("EDManager::AddDist", fNDims, pdf_->GetNDims(),
                              " dimensions in added pdf");
 
-    fDists.push_back(pdf_->Clone());    
+    fParameterTypes.push_back(type_);
+	fDists.push_back(pdf_->Clone());
     fNDists++;
-    fNormalisations.resize(fNDists, 0);
+
+	if (type_=="normalisation")
+		fNormalisations.resize(fNDists, 0);
+	if (type_=="oscillation"){
+		fOscillationsP1.resize(fNDists, 0);
+		fOscillationsP2.resize(fNDists, 0);
+		fOscillationsP3.resize(fNDists, 0);
+	}
     RegisterParameters();
 }
 
@@ -35,7 +48,7 @@ EDManager::Probability(const Event& event_) const{
     double prob = 0;
     for(size_t i = 0; i < fDists.size(); i++)
         prob += fNormalisations.at(i) * fDists.at(i)->Probability(event_);
-    
+
     return prob;
 }
 
@@ -47,17 +60,17 @@ EDManager::GetNormalisations() const{
 void
 EDManager::SetNormalisations(const std::vector<double>& norms_){
     if (norms_.size() != fNDists)
-        throw DimensionError("EDManager::SetNormalisations", fNDists, 
+        throw DimensionError("EDManager::SetNormalisations", fNDists,
                              norms_.size());
     fNormalisations = norms_;
 }
 
-size_t 
+size_t
 EDManager::GetNDims() const{
     return fNDims;
 }
 
-size_t 
+size_t
 EDManager::GetNDists() const{
     return fNDists;
 }
@@ -66,14 +79,32 @@ EDManager::GetNDists() const{
 
 void
 EDManager::RegisterParameters(){
+	RegisterParameters("normalisation");
+}
+
+void
+EDManager::RegisterParameters(const std::string& type_){
     fParameterManager.Clear();
     std::vector<std::string> parameterNames;
-    for(size_t i = 0; i < fDists.size(); i++)
-        parameterNames.push_back(fDists.at(i)->GetName() + "_norm");
-    
-    fParameterManager.AddContainer(fNormalisations, parameterNames);
-}    
-
+	std::vector<std::string> parameterNamesP1;
+	std::vector<std::string> parameterNamesP2;
+	std::vector<std::string> parameterNamesP3;
+    for(size_t i = 0; i < fDists.size(); i++){
+		if (fParameterTypes.at(i)=="normalisation")
+			parameterNames.push_back(fDists.at(i)->GetName() + "_norm");
+		if (fParameterTypes.at(i)=="oscillation"){
+			parameterNamesP1.push_back(fDists.at(i)->GetName() +"_delmsqr21");
+			parameterNamesP2.push_back(fDists.at(i)->GetName() +"_sinsqrtheta12");
+			parameterNamesP3.push_back(fDists.at(i)->GetName() +"_sinsqrtheta13");
+		}
+    }
+	if (type_=="normalisation")
+		fParameterManager.AddContainer(fNormalisations, parameterNames);
+	if (type_=="oscillation")
+		fParameterManager.AddContainer(fOscillationsP1, parameterNamesP1);
+		fParameterManager.AddContainer(fOscillationsP2, parameterNamesP2);
+		fParameterManager.AddContainer(fOscillationsP3, parameterNamesP3);
+}
 
 std::string
 EDManager::GetName() const{

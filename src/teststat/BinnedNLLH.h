@@ -21,13 +21,14 @@ class BinnedNLLH : public TestStatistic{
     void   SetSystematicManager(const SystematicManager&);
 
     void   AddPdf(const BinnedED&);
+	void   AddPdf(const std::string& name_, const BinnedED&);
     void   AddSystematic(Systematic*);
 
     void   AddPdfs(const std::vector<BinnedED>&);
     void   AddSystematics(const std::vector<Systematic*>);
 
     void   SetConstraint(const std::string& paramName_, double mean_, double sigma_);
-    
+
     void SetNormalisations(const std::vector<double>& norms_);
     std::vector<double> GetNormalisations() const;
 
@@ -54,7 +55,7 @@ class BinnedNLLH : public TestStatistic{
     void   SetSignalCutLog(const CutLog&);
 
     // Test statistic interface
-    void RegisterFitComponents(); 
+    void RegisterFitComponents();
     void SetParameters(const ParameterDict&);
     ParameterDict GetParameters() const;
     int  GetParameterCount() const;
@@ -75,6 +76,6 @@ class BinnedNLLH : public TestStatistic{
     BinnedED         fDataDist;
     bool             fCalculatedDataDist;
     bool             fAlreadyShrunk;
-    ComponentManager fComponentManager;    
+    ComponentManager fComponentManager;
 };
 #endif

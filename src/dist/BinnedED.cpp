@@ -35,7 +35,7 @@ BinnedED::SetHistogram(const Histogram& hist_){
     fHistogram = hist_;
 }
 
-void 
+void
 BinnedED::Fill(const Event& data_, double weight_){
     try{
         fHistogram.Fill(data_.ToObsSet(fObservables), weight_);
@@ -45,28 +45,28 @@ BinnedED::Fill(const Event& data_, double weight_){
     }
 }
 
-size_t 
+size_t
 BinnedED::FindBin(const Event& data_) const{
     try{
-        return fHistogram.FindBin(data_.ToObsSet(fObservables));    
+        return fHistogram.FindBin(data_.ToObsSet(fObservables));
     }
     catch (const DimensionError& e_){
         throw RepresentationError(std::string("Representation in compatible with pdf ") + e_.what());
-    }    
+    }
 }
 
-EventDistribution* 
+EventDistribution*
 BinnedED::Clone() const{
     return static_cast<EventDistribution*>(new BinnedED(*this));
 }
 
 
-std::string 
+std::string
 BinnedED::GetName() const{
     return fName;
 }
 
-void 
+void
 BinnedED::SetName(const std::string& name_){
     fName = name_;
 }
@@ -75,18 +75,18 @@ BinnedED::SetName(const std::string& name_){
 // All methods below this line just forward the call to the underlying histogram object //
 //////////////////////////////////////////////////////////////////////////////////////////
 
-void 
+void
 BinnedED::SetAxes(const AxisCollection& axes_){
     fHistogram.SetAxes(axes_);
 
 }
 
-const AxisCollection& 
+const AxisCollection&
 BinnedED::GetAxes() const{
     return fHistogram.GetAxes();
 }
 
-double 
+double
 BinnedED::Probability(const std::vector<double>& vals_) const{
     return fHistogram.GetBinContent(fHistogram.FindBin(vals_))/fHistogram.Integral();
 }
@@ -98,18 +98,18 @@ BinnedED::Probability(const Event& oberservations_) const{
     }
 
     catch(const RepresentationError& e_){
-        throw RepresentationError("BinnedED::Probability() failed with  " 
-                                  + std::string(e_.what()) 
+        throw RepresentationError("BinnedED::Probability() failed with  "
+                                  + std::string(e_.what())
                                   + " is the rep set correctly?");
     }
 }
 
-double 
+double
 BinnedED::Integral() const{
     return fHistogram.Integral();
 }
 
-void 
+void
 BinnedED::Normalise(){
     fHistogram.Normalise();
 }
@@ -119,39 +119,39 @@ BinnedED::Scale(double s_){
     fHistogram.Scale(s_);
 }
 
-void 
+void
 BinnedED::Fill(const std::vector<double>& vals_, double weight_){
     fHistogram.Fill(vals_, weight_);
 }
 
 
-void 
+void
 BinnedED::Fill(double vals_, double weight_){
     fHistogram.Fill(vals_, weight_);
 }
 
-size_t 
+size_t
 BinnedED::FindBin(const std::vector<double>& vals_) const{
     return fHistogram.FindBin(vals_);
-    
+
 }
 
-double 
+double
 BinnedED::GetBinContent(size_t bin_) const{
     return fHistogram.GetBinContent(bin_);
 }
 
-void 
+void
 BinnedED::AddBinContent(size_t bin_, double content_){
     fHistogram.AddBinContent(bin_, content_);
 }
 
-void 
+void
 BinnedED::SetBinContent(size_t bin_, double content_){
     fHistogram.SetBinContent(bin_, content_);
 }
 
-size_t 
+size_t
 BinnedED::GetNBins() const{
     return fHistogram.GetNBins();
 }
@@ -161,26 +161,26 @@ BinnedED::GetNDims() const{
     return fHistogram.GetNDims();
 }
 
-void 
+void
 BinnedED::Empty(){
     fHistogram.Empty();
 }
 
-size_t 
+size_t
 BinnedED::FlattenIndices(const std::vector<size_t>& indices_) const{
     return fHistogram.FlattenIndices(indices_);
 }
 
-std::vector<size_t> 
+std::vector<size_t>
 BinnedED::UnpackIndices(size_t bin_) const{
     return fHistogram.UnpackIndices(bin_);
 }
 
-std::vector<double> 
+std::vector<double>
 BinnedED::GetBinContents() const{
     return fHistogram.GetBinContents();
 }
-void 
+void
 BinnedED::SetBinContents(const std::vector<double>& data_){
     return fHistogram.SetBinContents(data_);
 }
@@ -195,9 +195,9 @@ BinnedED::Variances() const{
     return fHistogram.Variances();
 }
 
-BinnedED 
+BinnedED
 BinnedED::Marginalise(const std::vector<size_t>& indices_) const{
-    // Find the relative indicies indicies in 
+    // Find the relative indicies indicies in
     ObsSet newRep = ObsSet(indices_);
     std::vector<size_t> relativeIndices = newRep.GetRelativeIndices(fObservables);
 

@@ -21,6 +21,7 @@ class BinnedOscNLLH : public TestStatistic{
     void   SetSystematicManager(const SystematicManager&);
 
     void   AddPdf(const BinnedED&);
+	void   AddPdf(const std::string& name_, const BinnedED&);
     void   AddSystematic(Systematic*);
 
     void   AddPdfs(const std::vector<BinnedED>&);

@@ -77,7 +77,7 @@ Minuit::Initialise(TestStatistic * testStat_){
     if( !HasSameKeys(fMinima, fMaxima))
         throw LogicError(Formatter()
                          << "Minuit initialisation error "
-                         << " minima/maxima parameters dont't match:\n"
+                         << " minima/maxima parameters don't match:\n"
                          << "Minima for :\n" << ToString(GetKeys(fMinima)) << "\n"
                          << "Maxima for :\n" << ToString(GetKeys(fMaxima)) << "\n"
                          );
@@ -85,7 +85,7 @@ Minuit::Initialise(TestStatistic * testStat_){
     if( !HasSameKeys(fInitialErrors, fInitialValues))
         throw LogicError(Formatter()
                          << "Minuit initialisation error "
-                         << "Initial value/error parameters dont't match:\n"
+                         << "Initial value/error parameters don't match:\n"
                          << "Initial Values for :\n" << ToString(GetKeys(fInitialValues)) << "\n"
                          << "Initial Errors for :\n" << ToString(GetKeys(fInitialErrors)) << "\n"
                          );

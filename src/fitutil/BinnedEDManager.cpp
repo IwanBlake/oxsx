@@ -5,7 +5,7 @@
 #include <Exceptions.h>
 #include <sstream>
 
-unsigned 
+unsigned
 BinnedEDManager::GetNPdfs() const{
     return fOriginalPdfs.size();
 }
@@ -15,7 +15,7 @@ BinnedEDManager::GetNDims() const{
     return fNDims;
 }
 
-double 
+double
 BinnedEDManager::Probability(const Event& data_) const{
     double sum = 0;
 
@@ -32,7 +32,7 @@ BinnedEDManager::BinProbability(size_t bin_) const{
     try{
         for(size_t i = 0; i < fWorkingPdfs.size(); i++){
             sum += fNormalisations.at(i) * fWorkingPdfs.at(i).GetBinContent(bin_);
-    
+
         }
     }
     catch(const std::out_of_range&){
@@ -52,9 +52,9 @@ void
 BinnedEDManager::ApplyOscillations(){
     // If there are no oscillation parameters defined don't do anything
     //  ( then, working pdfs = original pdfs from initialisation)
-    
+
     // get parameters
-    
+
 
     // do oscillations here... modify this code
     // for(size_t j = 0; j < fOriginalPdfs.size(); j++){
@@ -67,7 +67,7 @@ void
 BinnedEDManager::ApplySystematics(const SystematicManager& sysMan_){
     // If there are no systematics dont do anything
     //  ( working pdfs = original pdfs from initialisation)
-    
+
     if(!sysMan_.GetSystematics().size())
         return;
 
@@ -84,14 +84,26 @@ BinnedEDManager::GetOriginalPdf(size_t index_) const{
 
 void
 BinnedEDManager::AddPdf(const BinnedED& pdf_){
+	AddPdf("normalisation", pdf_);
+}
+
+void
+BinnedEDManager::AddPdf(const std::string& type_, const BinnedED& pdf_){
+	fParameterTypes.push_back(type_);
     fOriginalPdfs.push_back(pdf_);
     fWorkingPdfs.push_back(pdf_);
     fNPdfs++;
-    fNormalisations.resize(fOriginalPdfs.size(), 0);
-    RegisterParameters();
+	if (type_=="normalisation")
+		fNormalisations.resize(fOriginalPdfs.size(), 0);
+	if (type_=="oscillation"){
+		fOscillationsP1.resize(fOriginalPdfs.size(), 0);
+		fOscillationsP2.resize(fOriginalPdfs.size(), 0);
+		fOscillationsP3.resize(fOriginalPdfs.size(), 0);
+	}
+    RegisterParameters(type_);
 }
 
-void 
+void
 BinnedEDManager::AddPdfs(const std::vector<BinnedED>& pdfs_){
     for(size_t i = 0; i < pdfs_.size(); i++){
         AddPdf(pdfs_.at(i));
@@ -108,7 +120,7 @@ void
 BinnedEDManager::ApplyShrink(const BinnedEDShrinker& shrinker_){
     if (!shrinker_.GetBuffers().size())
         return;
-        
+
     // only shrink if not already shrunk! FIXME: more obvious behaviour
     if (!fWorkingPdfs.size() || fWorkingPdfs.at(0).GetNBins() != fOriginalPdfs.at(0).GetNBins())
         return;
@@ -117,7 +129,7 @@ BinnedEDManager::ApplyShrink(const BinnedEDShrinker& shrinker_){
         fWorkingPdfs[i] = shrinker_.ShrinkDist(fWorkingPdfs.at(i));
         fWorkingPdfs[i].Normalise();
     }
-    
+
 }
 
 ////////////////////////////////
@@ -171,9 +183,29 @@ BinnedEDManager::GetParameterNames() const{
 
 void
 BinnedEDManager::RegisterParameters(){
+	RegisterParameters("normalisation");
+}
+
+void
+BinnedEDManager::RegisterParameters(const std::string& type_){
     fParameterManager.Clear();
-    std::vector<std::string> parameterNames;
-    for(size_t i = 0; i < fOriginalPdfs.size(); i++)
-        parameterNames.push_back(fOriginalPdfs.at(i).GetName() + "_norm");
-    fParameterManager.AddContainer(fNormalisations, parameterNames);
-}    
+	std::vector<std::string> parameterNames;
+    std::vector<std::string> parameterNamesP1;
+	std::vector<std::string> parameterNamesP2;
+	std::vector<std::string> parameterNamesP3;
+    for(size_t i = 0; i < fOriginalPdfs.size(); i++){
+		if (fParameterTypes.at(i)=="normalisation")
+			parameterNames.push_back(fOriginalPdfs.at(i).GetName() + "_norm");
+		if (fParameterTypes.at(i)=="oscillation"){
+			parameterNamesP1.push_back(fOriginalPdfs.at(i).GetName() +"_delmsqr21");
+			parameterNamesP2.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta12");
+			parameterNamesP3.push_back(fOriginalPdfs.at(i).GetName() +"_sinsqrtheta13");
+		}
+	}
+	if (type_=="normalisation")
+		fParameterManager.AddContainer(fNormalisations, parameterNames);
+	if (type_=="oscillation")
+		fParameterManager.AddContainer(fOscillationsP1, parameterNamesP1);
+		fParameterManager.AddContainer(fOscillationsP2, parameterNamesP2);
+		fParameterManager.AddContainer(fOscillationsP3, parameterNamesP3);
+}

@@ -119,6 +119,11 @@ BinnedOscNLLH::SetSystematicManager(const SystematicManager& man_){
 
 void
 BinnedOscNLLH::AddPdf(const BinnedED& pdf_){
+    fPdfManager.AddPdf("normalisation", pdf_);
+}
+
+void
+BinnedOscNLLH::AddPdf(const std::string& name_, const BinnedED& pdf_){
     fPdfManager.AddPdf(pdf_);
 }
 
