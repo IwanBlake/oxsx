@@ -10,6 +10,9 @@
 #include <MinuitFCN.h>
 #include <Minuit2/MnApplication.h>
 #include <Minuit2/FunctionMinimum.h>
+#include <Minuit2/MnUserTransformation.h>
+#include <Minuit2/MinimumState.h>
+#include <Minuit2/MinimumSeed.h>
 #include <FitResult.h>
 #include <DenseMatrix.h>
 #include <set>
@@ -20,13 +23,28 @@ class Minuit : public Optimiser{
  public:
     Minuit() :  fMethod("Migrad"),
                 fMinimiser(NULL), fMaxCalls(0), 
-                fTolerance(0.1), fMaximising(false) {}
+                fTolerance(0.1), fMaximising(false),
+                fIsOptimised(false),
+fnMin(ROOT::Minuit2::MinimumSeed(ROOT::Minuit2::MinimumState(2),ROOT::Minuit2::MnUserTransformation()),3)
+  {
+                
+                // ROOT::Minuit2::MnUserTransformation mut;
+                // ROOT::Minuit2::MinimumState ms(2);
+                // ROOT::Minuit2::MinimumSeed mseed(ms,mut);
+                // fnMin(ROOT::Minuit2::MinimumSeed(ROOT::Minuit2::MinimumState(2),ROOT::Minuit2::MnUserTransformation()),3);
+                }
     ~Minuit();
 
     virtual const FitResult& Optimise(TestStatistic*);
 
     void Fix(const std::string& param_);
     void Release(const std::string& param_);
+
+    std::vector< std::pair<double,double> > 
+    GetContour(TestStatistic* testStat_,const std::string&,const std::string&, const double&);
+
+    void SetErrors(ParameterDict& err_){fErrors= err_;}
+    ParameterDict GetErrors(){return fErrors;}
 
     void SetMethod(const std::string&);
     std::string GetMethod() const;
@@ -53,6 +71,7 @@ class Minuit : public Optimiser{
     bool GetMaximising() const  {return fMaximising;}
 
     FitResult GetFitResult() const;
+    
 
  private:
     void Initialise(TestStatistic*);
@@ -62,10 +81,12 @@ class Minuit : public Optimiser{
 
     ParameterDict fMinima;
     ParameterDict fMaxima;
+    ParameterDict fErrors;
     std::set<std::string>    fFixedParameters;
 
     unsigned fMaxCalls;
     double   fTolerance;
+    bool fIsOptimised;
 
     std::string fMethod;
     ROOT::Minuit2::MnApplication* fMinimiser;
@@ -77,5 +98,6 @@ class Minuit : public Optimiser{
     bool fMaximising;
 
     DenseMatrix CalcCovarianceMatrix(ROOT::Minuit2::FunctionMinimum);
+    ROOT::Minuit2::FunctionMinimum fnMin;
 };
 #endif

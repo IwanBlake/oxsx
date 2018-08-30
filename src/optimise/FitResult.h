@@ -51,8 +51,12 @@ class FitResult{
     void SetCovarianceMatrix(const DenseMatrix);
     const DenseMatrix GetCovarianceMatrix() const;
 
+    void SetErrors(const ParameterDict& err_);
+    ParameterDict GetErrors();
+
  private:
     ParameterDict fBestFit;
+    ParameterDict fErrors;
     std::vector<std::vector<double> > fStatSample;
     Histogram*    fStatSpace;
     HistMap f1DProjections;

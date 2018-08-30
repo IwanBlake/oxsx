@@ -6,6 +6,11 @@
 #include <iostream>
 #include <algorithm>
 
+void
+BinnedEDGenerator::AddPdf(const BinnedED& pdf_, const double& rate){
+    fPdfs.push_back(pdf_);
+    fRates.push_back(rate);
+}
 BinnedED
 BinnedEDGenerator::ExpectedRatesED(const std::string& name ) const{
     if(!(fPdfs.size() == fRates.size()))

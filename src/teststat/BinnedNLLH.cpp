@@ -1,4 +1,5 @@
 #include <BinnedNLLH.h>
+#include <Formatter.hpp>
 #include <math.h>
 #include <DataSet.h>
 #include <Exceptions.h>
@@ -19,9 +20,8 @@ BinnedNLLH::Evaluate(){
         fAlreadyShrunk = true;
     }
 
-    // Construct systematics
-    fSystematicManager.Construct();
-
+    // Construct systematics 
+    fSystematicManager.Construct(); 
     // Apply systematics
     fPdfManager.ApplySystematics(fSystematicManager);
 
@@ -33,10 +33,10 @@ BinnedNLLH::Evaluate(){
     for(size_t i = 0; i < fDataDist.GetNBins(); i++){
         double prob = fPdfManager.BinProbability(i);
         if(!prob)
-            throw std::runtime_error("BinnedNLLH::Encountered zero probability bin!");
-        nLogLH -= fDataDist.GetBinContent(i) *  log(prob);
-    }
 
+            throw std::runtime_error(Formatter()<<"BinnedNLLH::Encountered zero probability bin! On : "<<fDataDist.GetName());
+        nLogLH -= fDataDist.GetBinContent(i) *  log(prob);        
+    }
 
     // Extended LH correction
     const std::vector<double>& normalisations = fPdfManager.GetNormalisations();
@@ -48,7 +48,15 @@ BinnedNLLH::Evaluate(){
         it != fConstraints.end(); ++it)
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
 
+    // The logged probabilty will be negative, therefore we take it away from the nLogLH.
+    nLogLH -= fPriorManager.GetLogProbabilities(fComponentManager.GetParameters());
+
     return nLogLH;
+}
+
+void
+BinnedNLLH::AddPrior(const Prior& pir_){
+  fPriorManager.AddPrior(pir_);
 }
 
 void
@@ -59,6 +67,11 @@ BinnedNLLH::BinData(){
     DistFiller::FillDist(fDataDist, *fDataSet, fCuts, log);
     fCalculatedDataDist = true;
     fSignalCutLog = log;
+}
+
+void
+BinnedNLLH::AddDist(const BinnedED& pdf, const std::vector<std::string>& syss_){
+    fSystematicManager.AddDist(pdf,syss_);
 }
 
 void
@@ -76,14 +89,9 @@ BinnedNLLH::AddPdf(const BinnedED& pdf_){
     AddPdf("norm", pdf_);
 }
 
-void
-BinnedNLLH::AddPdf(const std::string& name_, const BinnedED& pdf_){
-    fPdfManager.AddPdf(name_, pdf_);
-}
-
-void
-BinnedNLLH::AddSystematic(Systematic* sys_){
-    fSystematicManager.Add(sys_);
+void 
+BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_){
+    fSystematicManager.Add(sys_, group_);
 }
 
 void
@@ -195,12 +203,31 @@ void
 BinnedNLLH::RegisterFitComponents(){
     fComponentManager.Clear();
     fComponentManager.AddComponent(&fPdfManager);
-    for(size_t i = 0; i < fSystematicManager.GetSystematics().size(); i++)
-        fComponentManager.AddComponent(fSystematicManager.GetSystematics().at(i));
+    
+    //Because the limits are set by name they can be added in any order.
+    const std::map<std::string, std::vector<Systematic*> > sys_ = fSystematicManager.GetSystematicsGroup();
+    std::vector<std::string> alreadyAdded;
+    for (std::map<std::string, std::vector<Systematic*> >::const_iterator group_ = sys_.begin(); group_ !=sys_.end(); ++group_) {
+        for (int i = 0; i < group_->second.size(); ++i) {
+            if( std::find( alreadyAdded.begin() , alreadyAdded.end() , group_->second.at(i)->GetName() ) == alreadyAdded.end() ){
+                fComponentManager.AddComponent( group_->second.at(i) );
+                alreadyAdded.push_back( group_->second.at(i)->GetName() );
+            }
+        }//End of group
+    }//End of groups
 }
+
 
 void
 BinnedNLLH::SetParameters(const ParameterDict& params_){
+    // for(ParameterDict::const_iterator i= params_.begin(); i!= params_.end(); ++i){
+    //     std::cout << i->first<< " "; 
+    // }
+    // std::cout<< std::endl;
+    // for(ParameterDict::const_iterator i= params_.begin(); i!= params_.end(); ++i){
+    //     std::cout << i->second<< " "; 
+    // }
+    // std::cout<< std::endl;
     try{
         fComponentManager.SetParameters(params_);
 		//std::cout<< "--------------------------here" << std::endl;
@@ -209,8 +236,7 @@ BinnedNLLH::SetParameters(const ParameterDict& params_){
         throw ParameterError(std::string("BinnedNLLH::") + e_.what());
     }
 }
-
-
+                                             
 ParameterDict
 BinnedNLLH::GetParameters() const{
     return fComponentManager.GetParameters();

@@ -45,6 +45,7 @@ std::vector<double>
 JumpPDF::Diff(const std::vector<double>& x_, 
                                 const std::vector<double>& x2_) const{
   std::vector<double> diff = x_;
+  //This goes through diff and does diff.at(i)-x2_.at(i) and stores the result back in diff.
   std::transform(diff.begin(), diff.end(), x2_.begin(), 
                  diff.begin(), std::minus<double>());
   return diff;
@@ -54,6 +55,7 @@ std::vector<double>
 JumpPDF::Sum(const std::vector<double>& x_, 
                                const std::vector<double>& x2_) const{
   std::vector<double> sum = x_;
+  //This goes through diff and does sum.at(i)-x2_.at(i) and stores the result back in sum.
   std::transform(sum.begin(), sum.end(), x2_.begin(), 
                  sum.begin(), std::plus<double>());
   return sum;
@@ -75,6 +77,7 @@ JumpPDF::ConditionalProbability(const std::vector<double>& x_,
     throw NULLPointerAccessError("JumpPDF::Probability",
                                  "Have you set the function?");
      
+  //This is the probabilitly of a jump diff big
   return fPDF->operator()(Diff(x_, x2_));
 }
 

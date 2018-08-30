@@ -54,6 +54,10 @@ AxisCollection::CountBins(){
     }
 }
 
+int AxisCollection::GetDim(const std::string& name_) const{
+  return std::distance(fAxisNames.begin(),std::find(fAxisNames.begin(),fAxisNames.end(), name_));
+}
+
 void 
 AxisCollection::AddAxis(const BinAxis& axis_){
     if (HasAxis(axis_.GetName())){

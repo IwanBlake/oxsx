@@ -42,6 +42,7 @@ class AxisCollection{
 
     
     std::vector<std::string> GetAxisNames() const;
+    int GetDim(const std::string& name_) const;
 
  private:
     std::vector<BinAxis> fAxes;

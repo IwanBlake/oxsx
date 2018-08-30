@@ -31,6 +31,10 @@ class SparseMatrix{
     size_t GetNCols() const {return fNCols;}
     void   SetZeros();
     void   SetToIdentity();
+    void   Print();
+
+    void   Print(const std::string&);
+    void   PrintDense(const std::string&);
 
  private:
     arma::sp_mat fArmaMat;

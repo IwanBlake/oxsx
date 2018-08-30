@@ -9,6 +9,8 @@
 #include <CutCollection.h>
 #include <CutLog.h>
 #include <QuadraticConstraint.h>
+#include <Prior.h>
+#include <PriorManager.h>
 #include <map>
 #include <vector>
 
@@ -21,14 +23,14 @@ class BinnedNLLH : public TestStatistic{
     void   SetSystematicManager(const SystematicManager&);
 
     void   AddPdf(const BinnedED&);
-	void   AddPdf(const std::string& name_, const BinnedED&);
-    void   AddSystematic(Systematic*);
+    void   AddSystematic(Systematic* sys_, const std::string& group_ = "default" );
 
     void   AddPdfs(const std::vector<BinnedED>&);
     void   AddSystematics(const std::vector<Systematic*>);
 
     void   SetConstraint(const std::string& paramName_, double mean_, double sigma_);
-
+    void   AddPrior(const Prior&);
+    
     void SetNormalisations(const std::vector<double>& norms_);
     std::vector<double> GetNormalisations() const;
 
@@ -39,6 +41,8 @@ class BinnedNLLH : public TestStatistic{
 
     void SetDataSet(DataSet*);
     DataSet* GetDataSet();
+
+    void AddDist(const BinnedED& pdf, const std::vector<std::string>& syss_);
 
     void SetBuffer(size_t dim_, unsigned lower_, unsigned upper_);
     std::pair<unsigned, unsigned> GetBuffer(size_t dim_) const;
@@ -66,6 +70,7 @@ class BinnedNLLH : public TestStatistic{
     BinnedEDManager      fPdfManager;
     SystematicManager    fSystematicManager;
     BinnedEDShrinker     fPdfShrinker;
+    PriorManager         fPriorManager;
     DataSet*             fDataSet;
     CutCollection        fCuts;
     std::map<std::string, QuadraticConstraint> fConstraints;
