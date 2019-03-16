@@ -142,9 +142,9 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   initialerr["d21"] = 0.1*initialval["d21"];
   initialerr["s12"] = 0.1*initialval["s12"];
   
-  r1->SetSeed(0);
-  double rand = r1->Rndm();
+  //r1->SetSeed(0);
   for (int i = 0; i< numPdfs; i++){
+    double rand = r1->Rndm();
     BinnedED * reactorPdf = new BinnedED(reactorNames[i],axes);
     reactorPdf->SetObservables(0);
     reactorPdf->Add(*reactorPdf0,1);
