@@ -32,6 +32,8 @@ public:
 
     void Construct() {;}
 
+    bool OscSysFlag() {return true;}
+
     void   SetParameter(const std::string& name_, double value) {;}
     double GetParameter(const std::string& name_) const { return 1;}
 

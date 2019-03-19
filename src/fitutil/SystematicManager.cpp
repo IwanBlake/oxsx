@@ -173,17 +173,32 @@ SystematicManager::DistortEDs(std::vector<BinnedED>& OrignalEDs_,std::vector<Bin
 
             if( fGroups.size() >1 ){
               if ( fGroups.at("").size() == 0 ){
+		//std::cout<<"ONLY 1 GROUP!"<<std::endl;
+		/*std::cout<<"\n Before Distort"<<std::endl;
+		for (size_t k = 0; k < WorkingEDs_[j].GetBinContents().size() ; k++){
+		  std::cout<<WorkingEDs_[j].GetBinContents()[k]<<std::endl;
+		}
+		*/
                 WorkingEDs_[j].SetBinContents(GetTotalResponse(groupName).operator()(OrignalEDs_.at(j).GetBinContents()));
+		/*std::cout<<"\n After Distort"<<std::endl;
+		for (size_t k = 0; k < WorkingEDs_[j].GetBinContents().size() ; k++){
+		  std::cout<<WorkingEDs_[j].GetBinContents()[k]<<std::endl;
+		}
+		std::cout<<"\n"<<std::endl;
+		*/
               } else{
+		
+		
                 WorkingEDs_[j].SetBinContents(
                     GetTotalResponse(groupName).operator()(
                       GetTotalResponse("").operator()(OrignalEDs_.at(j).GetBinContents())
                       )
-                    );
+					      );
               }
             }else{
+	      	
               WorkingEDs_[j].SetBinContents(
-                  GetTotalResponse(groupName).operator()(OrignalEDs_.at(j).GetBinContents()));
+		      GetTotalResponse(groupName).operator()(OrignalEDs_.at(j).GetBinContents()));
             }
         }
     }
@@ -232,6 +247,18 @@ const std::vector<Systematic*>&
 SystematicManager::GetSystematicsInGroup(const std::string& name) const{
     try{
         return fGroups.at(name);
+    }catch(const std::out_of_range& e_){
+        throw NotFoundError(Formatter()<<
+                "SystematicManager :: name : "<< 
+                name <<
+                " not known to the SystematicManager.");
+    }
+}
+
+const std::vector<std::string>&
+SystematicManager::GetEDsInGroup(const std::string& name) const{
+    try{
+        return fEDGroups.at(name);
     }catch(const std::out_of_range& e_){
         throw NotFoundError(Formatter()<<
                 "SystematicManager :: name : "<< 

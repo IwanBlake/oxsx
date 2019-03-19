@@ -37,6 +37,7 @@ NuOsc::Construct(){
     std::vector<unsigned> nonZeroRowIndices;
     std::vector<unsigned> nonZeroColIndices;
     std::vector<double> values;
+    double trace = 0;
     nonZeroRowIndices.reserve(fCompatibleBins.at(0).size());
     nonZeroColIndices.reserve(fCompatibleBins.at(0).size());
 
@@ -48,12 +49,16 @@ NuOsc::Construct(){
 
         nonZeroRowIndices.push_back(origBin);
         nonZeroColIndices.push_back(origBin);
-        values.push_back(fDist -> Integral(lowEdges, highEdges));
+	values.push_back(fDist -> Integral(lowEdges, highEdges));
     }
-
+    
     fResponse.SetComponents(nonZeroRowIndices, nonZeroColIndices, values);
 }
 
+int
+NuOsc::IsOscSys() const{
+  return 1;
+}
 
 void
 NuOsc::CacheCompatibleBins(){

@@ -74,6 +74,11 @@ Scale::Construct(){
     return;
 }
 
+int
+Scale::IsOscSys() const{
+  return -1;
+}
+
 void
 Scale::SetScaleFactor(double scaleFactor_){
     fScaleFactor = scaleFactor_;

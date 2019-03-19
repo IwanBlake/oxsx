@@ -12,7 +12,14 @@ double
 BinnedNLLH::Evaluate(){
     if(!fDataSet && !fCalculatedDataDist) 
         throw LogicError("BinnedNNLH function called with no data set and no DataDist! set one of these first");
-    
+    /*std::cout<<"\n \n 1)"<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+      }
+    */
     if (!fCalculatedDataDist)
         BinData();
     
@@ -20,34 +27,152 @@ BinnedNLLH::Evaluate(){
         fDataDist = fPdfShrinker.ShrinkDist(fDataDist);
         fAlreadyShrunk = true;
     }
-
+    /*
+    std::cout<<"\n 2) AlreadyShrunk"<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
     // Construct systematics 
     fSystematicManager.Construct(); 
+    /*
+    std::cout<<"\n 3) Constructed Sys"<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
     // Apply systematics
     fPdfManager.ApplySystematics(fSystematicManager);
+    /*
+    std::cout<<"\n 4) Applied Sys "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
+    
+    //check num working pdfs == getNPdfs?
+    //rename GetEDsInGroup func?
+    for (size_t i = 0 ; i < fPdfManager.GetNPdfs(); i++){
+      std::string pdfname = fPdfManager.GetWorkingPdf(i).GetName();
+      double osc_loss;
+      std::vector<std::string> groupsined = fSystematicManager.GetEDsInGroup(pdfname);
+      for (size_t j = 0 ; j < groupsined.size(); j++){
+	std::vector<Systematic*> sysingroup = fSystematicManager.GetSystematicsInGroup(groupsined[j]);
+	for (size_t k = 0 ; k < sysingroup.size(); k++){
+	  //if (sysingroup[k]->OscSysFlag()){
+	  //std::cout<<"sys group! "<<sysingroup[k]->GetParameterCount()<<std::endl;
+	  //}else{
+	  //std::cout<<"sys group! "<<sysingroup[k]->GetParameterCount()<<std::endl;
+	  //std::cout<<"sys group! "<<sysingroup[k]->IsOscSys()<<std::endl;
+	  std::cout<<sysingroup[k]->GetName()<<std::endl;
+	  //std::cout<<edsgroup[j]<<std::endl;
 
+	  //}
+	}
+      }
+      std::cout<<" "<<std::endl;
+    }
+    std::cout<<"\n"<<std::endl;
+    
+    
+    /*std::vector<std::string> edsgroup1 = fSystematicManager.GetEDsInGroup("BRUCE1");
+    std::vector<std::string> edsgroup2 = fSystematicManager.GetEDsInGroup("BRUCE2");
+    //std::vector<Systematic*> edsgroup = fSystematicManager.GetSytematicsInGroup("group0");
+    for (size_t j = 0 ; j < edsgroup1.size(); j++)
+      std::cout<<edsgroup1[j]<<std::endl;
+    for (size_t j = 0 ; j < edsgroup2.size(); j++)
+      std::cout<<edsgroup2[j]<<std::endl;
+      //std::cout<<edsgroup[i]->GetName()<<std::endl;
+      */
+    double osc_loss = fPdfManager.GetWorkingPdf(0).Integral();
+    
+    /*std::vector<double> oscnormalisations = fPdfManager.GetNormalisations();
+    for (size_t i = 0; i < oscnormalisations.size(); i++)
+      oscnormalisations[i] = oscnormalisations[i] * osc_loss;
+    fPdfManager.SetNormalisations(oscnormalisations);
+    
+    std::cout<<"\n 5) changed norm "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
+    
     // Apply Shrinking
     fPdfManager.ApplyShrink(fPdfShrinker);
-
+    
+    /*std::cout<<"\n 6) AppliedShrink "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
+    //std::cout<<"\n"<<std::endl;
     // loop over bins and calculate the likelihood
     double nLogLH = 0;
+    //std::cout<<"fdatadist bins: "<<fDataDist.GetNBins()<<std::endl;
     for(size_t i = 0; i < fDataDist.GetNBins(); i++){
-        double prob = fPdfManager.BinProbability(i);
+      //std::cout<<fDataDist.GetBinContent(i)<<std::endl;
+      //double prob = fPdfManager.BinProbability(i);
+      //std::cout<<"oscloss"<<std::endl;
+      double prob = fPdfManager.BinProbability(i, osc_loss);
         if(!prob)
             throw std::runtime_error("BinnedNLLH::Encountered zero probability bin!");
         nLogLH -= fDataDist.GetBinContent(i) *  log(prob);        
     }
-
+    /*
+    std::cout<<"\n 7) Calculated LH basic "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
     // Extended LH correction
     const std::vector<double>& normalisations = fPdfManager.GetNormalisations();
     for(size_t i = 0; i < normalisations.size(); i++)
-        nLogLH += normalisations.at(i);
-            
+      nLogLH += osc_loss * normalisations.at(i);
+      //nLogLH += normalisations.at(i);
+    
+    /*std::cout<<"\n 8) Extended LH "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+    }
+    */
     // Constraints
     for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
         it != fConstraints.end(); ++it)
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
+
+    /*for (size_t i = 0; i < oscnormalisations.size(); i++)
+    oscnormalisations[i] = (oscnormalisations[i]/osc_loss);
+    fPdfManager.SetNormalisations(oscnormalisations);
     
+    std::cout<<"\n 9) Changed norms back "<<std::endl;
+    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
+      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
+    }
+    for (size_t i = 0; i < 1; i++){
+      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
+      }*/
+
     return nLogLH;
 }
 

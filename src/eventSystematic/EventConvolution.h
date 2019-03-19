@@ -10,6 +10,8 @@ class ConditionalPDF;
 class Event;
 class EventConvolution : public EventSystematic{
  public:
+  bool OscSysFlag() const;
+
   // Constructors
  EventConvolution(const std::string& name_): fDist(NULL), fName(name_){}
   ~EventConvolution();

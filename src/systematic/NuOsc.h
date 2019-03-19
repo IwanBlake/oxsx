@@ -13,6 +13,8 @@ class NuOsc : public Systematic{
     ~NuOsc();
     void SetFunction(PDF* function_);
     void Construct();    
+    
+    int IsOscSys() const;
 
     // Make this fittable, by delegating to the underlying pdf
     void   SetParameter(const std::string& name_, double value);

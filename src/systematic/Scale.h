@@ -14,6 +14,8 @@ class Scale : public Systematic{
     
     void Construct();
 
+    int IsOscSys() const;
+
     // Adjustable scale factor
     void   SetParameter(const std::string& name_, double value);
     double GetParameter(const std::string& name_) const;
