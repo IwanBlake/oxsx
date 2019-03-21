@@ -256,7 +256,7 @@ SystematicManager::GetSystematicsInGroup(const std::string& name) const{
 }
 
 const std::vector<std::string>&
-SystematicManager::GetEDsInGroup(const std::string& name) const{
+SystematicManager::GetGroupsfromED(const std::string& name) const{
     try{
         return fEDGroups.at(name);
     }catch(const std::out_of_range& e_){

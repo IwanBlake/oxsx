@@ -15,6 +15,12 @@ class QuadraticConstraint{
         return (val_ - fMean) * (val_ - fMean) / (2 * fWidth * fWidth);
     }
     
+    /*double Evaluate(double val_, double osc_loss) const {
+      double frac = fWidth/fMean;
+      
+      return (val_ - fMean) * (val_ - fMean) / (2 * fWidth * fWidth);
+      }*/
+    
  private:
     double fMean;
     double fWidth;

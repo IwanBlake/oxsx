@@ -23,9 +23,11 @@ class BinnedNLLH : public TestStatistic{
     void   AddPdf(const BinnedED&);
     void   AddSystematic(Systematic* sys_);
     void   AddSystematic(Systematic* sys_, const std::string& group_ );
+    void   AddSystematic(Systematic* sys_, const std::string& group_, bool ifosc);
 
     void   AddSystematics(const std::vector<Systematic*>);
     void   AddSystematics(const std::vector<Systematic*>, const std::vector<std::string>&);
+    void   AddSystematics(const std::vector<Systematic*>, const std::vector<std::string>&, const std::vector<bool> ifosc);
 
     void   SetConstraint(const std::string& paramName_, double mean_, double sigma_);
     
@@ -75,7 +77,9 @@ class BinnedNLLH : public TestStatistic{
     DataSet*             fDataSet;
     CutCollection        fCuts;
     std::map<std::string, QuadraticConstraint> fConstraints;
-
+    
+    std::vector<std::string> fIfOscSystematics;
+    
     double  fSignalCutEfficiency;
     CutLog  fSignalCutLog;
 

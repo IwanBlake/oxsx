@@ -7,9 +7,16 @@
 #include <Exceptions.h>
 #include <Formatter.hpp>
 #include <iostream>
+#include <vector>
+
+int stepcount = 0;
 
 double 
 BinnedNLLH::Evaluate(){
+    if (stepcount % 10 == 0)
+      std::cout<<stepcount<<std::endl; 
+    stepcount += 1;
+  
     if(!fDataSet && !fCalculatedDataDist) 
         throw LogicError("BinnedNNLH function called with no data set and no DataDist! set one of these first");
     /*std::cout<<"\n \n 1)"<<std::endl;
@@ -60,40 +67,39 @@ BinnedNLLH::Evaluate(){
     */
     
     //check num working pdfs == getNPdfs?
-    //rename GetEDsInGroup func?
-    for (size_t i = 0 ; i < fPdfManager.GetNPdfs(); i++){
-      std::string pdfname = fPdfManager.GetWorkingPdf(i).GetName();
-      double osc_loss;
-      std::vector<std::string> groupsined = fSystematicManager.GetEDsInGroup(pdfname);
-      for (size_t j = 0 ; j < groupsined.size(); j++){
-	std::vector<Systematic*> sysingroup = fSystematicManager.GetSystematicsInGroup(groupsined[j]);
-	for (size_t k = 0 ; k < sysingroup.size(); k++){
-	  //if (sysingroup[k]->OscSysFlag()){
-	  //std::cout<<"sys group! "<<sysingroup[k]->GetParameterCount()<<std::endl;
-	  //}else{
-	  //std::cout<<"sys group! "<<sysingroup[k]->GetParameterCount()<<std::endl;
-	  //std::cout<<"sys group! "<<sysingroup[k]->IsOscSys()<<std::endl;
-	  std::cout<<sysingroup[k]->GetName()<<std::endl;
-	  //std::cout<<edsgroup[j]<<std::endl;
+    //swap osc_loss vector with map to ensure getting correct loss for each pdf?
 
-	  //}
-	}
+    //int numpdfs = fPdfManager.GetNPdfs();
+    //double * osc_loss [numpdfs];
+    std::vector<double> osc_loss;
+    //std::vector<std::string> osc_loss_pdfnames;
+    for (size_t i = 0 ; i < fPdfManager.GetNPdfs(); i++){
+      bool foundoscgroup = false;
+      std::string pdfname = fPdfManager.GetWorkingPdf(i).GetName();
+      std::vector<std::string> groupsined = fSystematicManager.GetGroupsfromED(pdfname);
+      for (size_t j = 0 ; j < groupsined.size(); j++){
+	std::vector<std::string>::iterator it = std::find(fIfOscSystematics.begin(),fIfOscSystematics.end(),groupsined[j]);
+	if (it != fIfOscSystematics.end()){
+	  //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
+	  foundoscgroup = true;
+	  break;
+	}//else
+	//std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
       }
-      std::cout<<" "<<std::endl;
+      
+      if (foundoscgroup){
+	//std::cout<<fPdfManager.GetWorkingPdf(i).GetName()<<" "<<fPdfManager.GetWorkingPdf(i).Integral()<<std::endl;
+	osc_loss.push_back(fPdfManager.GetWorkingPdf(i).Integral());
+	//osc_loss_pdfnames.push_back(pdfname + "_norm");
+      }else{
+	osc_loss.push_back(1.);
+	//osc_loss_pdfnames.push_back(pdfname);
+      }
+      //std::cout<<" "<<std::endl;
     }
-    std::cout<<"\n"<<std::endl;
+    //std::cout<<"\n"<<std::endl;
     
-    
-    /*std::vector<std::string> edsgroup1 = fSystematicManager.GetEDsInGroup("BRUCE1");
-    std::vector<std::string> edsgroup2 = fSystematicManager.GetEDsInGroup("BRUCE2");
-    //std::vector<Systematic*> edsgroup = fSystematicManager.GetSytematicsInGroup("group0");
-    for (size_t j = 0 ; j < edsgroup1.size(); j++)
-      std::cout<<edsgroup1[j]<<std::endl;
-    for (size_t j = 0 ; j < edsgroup2.size(); j++)
-      std::cout<<edsgroup2[j]<<std::endl;
-      //std::cout<<edsgroup[i]->GetName()<<std::endl;
-      */
-    double osc_loss = fPdfManager.GetWorkingPdf(0).Integral();
+    //double osc_loss = fPdfManager.GetWorkingPdf(0).Integral();
     
     /*std::vector<double> oscnormalisations = fPdfManager.GetNormalisations();
     for (size_t i = 0; i < oscnormalisations.size(); i++)
@@ -145,7 +151,7 @@ BinnedNLLH::Evaluate(){
     // Extended LH correction
     const std::vector<double>& normalisations = fPdfManager.GetNormalisations();
     for(size_t i = 0; i < normalisations.size(); i++)
-      nLogLH += osc_loss * normalisations.at(i);
+      nLogLH += osc_loss[i] * normalisations.at(i);
       //nLogLH += normalisations.at(i);
     
     /*std::cout<<"\n 8) Extended LH "<<std::endl;
@@ -156,10 +162,31 @@ BinnedNLLH::Evaluate(){
       std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
     }
     */
+    
+    //don't need to change this part, osc_loss parameters don't affect calculation?
+    //get rid of finding functions and just insist constraints must be placed in the same order??
+    // Constraints
+    /*for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
+        it != fConstraints.end(); ++it){
+        std::vector<std::string>::iterator pdfnameit = std::find(osc_loss_pdfnames.begin(), osc_loss_pdfnames.end(), it->first);
+	if (pdfnameit != osc_loss_pdfnames.end()){
+	  int pdfnameindex = std::distance(osc_loss_pdfnames.begin(), pdfnameit);
+	  //std::cout<<"Constraint name: "<<it->first<<" pdf name + _norm: "<<osc_loss_pdfnames[pdfnameindex]<<std::endl;
+	  
+	  nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first),osc_loss[pdfnameindex]);
+	}
+	else{
+	  //std::cout<<"NOT OSCILLATED PDF NORM CONSTRAINT: "<<it->first<<std::endl;
+	  nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
+	}
+    }
+    */
+    
     // Constraints
     for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
-        it != fConstraints.end(); ++it)
+        it != fConstraints.end(); ++it)      
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
+    
 
     /*for (size_t i = 0; i < oscnormalisations.size(); i++)
     oscnormalisations[i] = (oscnormalisations[i]/osc_loss);
@@ -225,8 +252,15 @@ BinnedNLLH::AddSystematic(Systematic* sys_){
     fSystematicManager.Add(sys_);
 }
 
-void 
+void
 BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_){
+    fSystematicManager.Add(sys_, group_);
+}
+
+void
+BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_, const bool ifosc){
+    if (ifosc)
+      fIfOscSystematics.push_back(group_);
     fSystematicManager.Add(sys_, group_);
 }
 
@@ -285,6 +319,17 @@ BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vecto
        throw DimensionError(Formatter()<<"BinnedNLLH:: #sys_ != #group_");
     for(size_t i = 0; i <sys_.size(); i++)
         AddSystematic(sys_.at(i), groups_.at(i));
+}
+
+void
+BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vector<std::string> & groups_, const std::vector<bool> ifosc){
+    if (groups_.size() != sys_.size())
+       throw DimensionError(Formatter()<<"BinnedNLLH:: #sys_ != #group_");
+    for(size_t i = 0; i <sys_.size(); i++){
+        AddSystematic(sys_.at(i), groups_.at(i));
+	if (ifosc[i])
+	  fIfOscSystematics.push_back(groups_.at(i));
+    }
 }
 
 void

@@ -20,8 +20,6 @@ class Convolution : public Systematic{
     void SetConditionalPDF(ConditionalPDF* function_);
     void Construct();    
 
-    int IsOscSys() const;
-
     // Make this fittable, by delegating to the underlying pdf
     void   SetParameter(const std::string& name_, double value);
     double GetParameter(const std::string& name_) const;

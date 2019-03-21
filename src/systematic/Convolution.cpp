@@ -77,12 +77,6 @@ Convolution::Construct(){
     fResponse.SetComponents(nonZeroRowIndices, nonZeroColIndices, values);
 }
 
-
-int
-Convolution::IsOscSys() const{
-  return -1;
-}
-
 void
 Convolution::CacheCompatibleBins(){
     fCompatibleBins.resize(fAxes.GetNBins());
