@@ -36,6 +36,7 @@
 #include <TH1D.h>
 #include <ROOTMultiPlot.h>
 #include <TRandom3.h>
+#include <TVector.h>
 
 
 #include <ctime>
