@@ -346,7 +346,7 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
  
   BinnedNLLH lhFunction;
   lhFunction.SetBufferAsOverflow(true);
-  int Buff = 5;
+  int Buff = 3;
   lhFunction.SetBuffer(0,Buff,Buff);  
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   double rand = r1->Rndm();
