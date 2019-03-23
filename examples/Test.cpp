@@ -233,8 +233,9 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
 
     sprintf(name,"osc_%s",reactorNames[i].c_str());
     std::cout<<name<<std::endl;
-    lhFunction.AddSystematic(reactorSystematic,name,true);
-    lhFunction.AddDist(*reactorPdf,std::vector<std::string>(1,name));  
+    //lhFunction.AddSystematic(reactorSystematic,name,true);
+    lhFunction.AddSystematic(reactorSystematic,name);
+    lhFunction.AddDist(*reactorPdf,std::vector<std::string>(1,name),true);  
     /*
     if (i == 0){
       Convolution* convsys = new Convolution("conv_Systematic");
@@ -283,6 +284,7 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   Minuit min;
   min.SetMethod("Migrad");
   min.SetMaxCalls(10000000);
+  min.SetTolerance(0.001);
   min.SetMinima(minima);
   min.SetMaxima(maxima);
   min.SetInitialValues(initialval);
@@ -295,7 +297,9 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   
   FitResult fitResult = min.Optimise(&lhFunction);
   ParameterDict bestFit = fitResult.GetBestFit();
+  fitResult.SetPrintPrecision(6);
   fitResult.Print();
+  // fitvalid flag
   
   BinnedED * Result = new BinnedED("Result",axes);
   BinnedED TotalResult("TotalResult",axes);

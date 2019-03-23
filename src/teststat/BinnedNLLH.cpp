@@ -81,8 +81,9 @@ BinnedNLLH::Evaluate(){
       std::vector<std::string>::iterator it = std::find(fOscPdfs.begin(),fOscPdfs.end(),pdfname);
       if (it != fOscPdfs.end()){
 	//std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
+	//std::cout<<"ED: "<<pdfname<<std::endl;
 	foundoscgroup = true;
-	break;
+	//break;
       }//else
       //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
       
@@ -226,7 +227,7 @@ BinnedNLLH::AddDist(const std::vector<BinnedED>& pdfs, const std::vector<std::ve
        throw DimensionError(Formatter()<<"BinnedNLLH:: #sys_ != #group_");
     for (int i = 0; i < pdfs.size(); ++i){
         AddDist( pdfs.at(i), sys_.at(i) );
-	if (ifosc)
+	if (ifosc[i])
 	    fOscPdfs.push_back(pdfs.at(i).GetName());
     }
 }
@@ -252,15 +253,16 @@ BinnedNLLH::AddDist(const BinnedED& pdf_){
 }
 
 void
-BinnedNLLH::AddPdf(const BinnedED& pdf_){
-    AddDist(pdf_);
+BinnedNLLH::AddDist(const BinnedED& pdf_, const bool ifosc){
+    fPdfManager.AddPdf(pdf_);
+    fSystematicManager.AddDist(pdf_,"");
+    if (ifosc)
+      fOscPdfs.push_back(pdf_.GetName());
 }
 
 void
-BinnedNLLH::AddPdf(const BinnedED& pdf_, const bool ifosc){
+BinnedNLLH::AddPdf(const BinnedED& pdf_){
     AddDist(pdf_);
-    if (ifosc)
-      fOscPdfs.push_back(pdf_.GetName());
 }
 
 void
