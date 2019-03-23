@@ -76,25 +76,24 @@ BinnedNLLH::Evaluate(){
     for (size_t i = 0 ; i < fPdfManager.GetNPdfs(); i++){
       bool foundoscgroup = false;
       std::string pdfname = fPdfManager.GetWorkingPdf(i).GetName();
-      std::vector<std::string> groupsined = fSystematicManager.GetGroupsfromED(pdfname);
-      for (size_t j = 0 ; j < groupsined.size(); j++){
-	std::vector<std::string>::iterator it = std::find(fIfOscSystematics.begin(),fIfOscSystematics.end(),groupsined[j]);
-	if (it != fIfOscSystematics.end()){
-	  //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
-	  foundoscgroup = true;
-	  break;
-	}//else
-	//std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
-      }
+      //std::vector<std::string> groupsined = fSystematicManager.GetGroupsfromED(pdfname);
+      //for (size_t j = 0 ; j < groupsined.size(); j++){
+      std::vector<std::string>::iterator it = std::find(fOscPdfs.begin(),fOscPdfs.end(),pdfname);
+      if (it != fOscPdfs.end()){
+	//std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
+	foundoscgroup = true;
+	break;
+      }//else
+      //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
       
       if (foundoscgroup){
 	//std::cout<<fPdfManager.GetWorkingPdf(i).GetName()<<" "<<fPdfManager.GetWorkingPdf(i).Integral()<<std::endl;
 	osc_loss.push_back(fPdfManager.GetWorkingPdf(i).Integral());
 	//osc_loss_pdfnames.push_back(pdfname + "_norm");
-      }else{
+      }else//{
 	osc_loss.push_back(1.);
-	//osc_loss_pdfnames.push_back(pdfname);
-      }
+      //osc_loss_pdfnames.push_back(pdfname);
+      //}
       //std::cout<<" "<<std::endl;
     }
     //std::cout<<"\n"<<std::endl;
@@ -222,9 +221,28 @@ BinnedNLLH::AddDist(const std::vector<BinnedED>& pdfs, const std::vector<std::ve
 }
 
 void
+BinnedNLLH::AddDist(const std::vector<BinnedED>& pdfs, const std::vector<std::vector<std::string> >& sys_, const std::vector<bool> ifosc){
+    if (pdfs.size() != sys_.size())
+       throw DimensionError(Formatter()<<"BinnedNLLH:: #sys_ != #group_");
+    for (int i = 0; i < pdfs.size(); ++i){
+        AddDist( pdfs.at(i), sys_.at(i) );
+	if (ifosc)
+	    fOscPdfs.push_back(pdfs.at(i).GetName());
+    }
+}
+
+void
 BinnedNLLH::AddDist(const BinnedED& pdf_, const std::vector<std::string>& syss_){
     fPdfManager.AddPdf(pdf_);
     fSystematicManager.AddDist(pdf_,syss_);
+}
+
+void
+BinnedNLLH::AddDist(const BinnedED& pdf_, const std::vector<std::string>& syss_, const bool ifosc){
+    fPdfManager.AddPdf(pdf_);
+    fSystematicManager.AddDist(pdf_,syss_);
+    if (ifosc)
+      fOscPdfs.push_back(pdf_.GetName());
 }
 
 void
@@ -232,9 +250,17 @@ BinnedNLLH::AddDist(const BinnedED& pdf_){
     fPdfManager.AddPdf(pdf_);
     fSystematicManager.AddDist(pdf_,"");
 }
+
 void
 BinnedNLLH::AddPdf(const BinnedED& pdf_){
     AddDist(pdf_);
+}
+
+void
+BinnedNLLH::AddPdf(const BinnedED& pdf_, const bool ifosc){
+    AddDist(pdf_);
+    if (ifosc)
+      fOscPdfs.push_back(pdf_.GetName());
 }
 
 void
@@ -257,12 +283,12 @@ BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_){
     fSystematicManager.Add(sys_, group_);
 }
 
-void
+/*void
 BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_, const bool ifosc){
     if (ifosc)
       fIfOscSystematics.push_back(group_);
     fSystematicManager.Add(sys_, group_);
-}
+    }*/
 
 void
 BinnedNLLH::SetDataSet(DataSet* dataSet_){
@@ -320,7 +346,7 @@ BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vecto
     for(size_t i = 0; i <sys_.size(); i++)
         AddSystematic(sys_.at(i), groups_.at(i));
 }
-
+/*
 void
 BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vector<std::string> & groups_, const std::vector<bool> ifosc){
     if (groups_.size() != sys_.size())
@@ -331,7 +357,7 @@ BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vecto
 	  fIfOscSystematics.push_back(groups_.at(i));
     }
 }
-
+*/
 void
 BinnedNLLH::SetNormalisations(const std::vector<double>& norms_){    
     fPdfManager.SetNormalisations(norms_);
