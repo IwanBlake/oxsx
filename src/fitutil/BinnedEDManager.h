@@ -21,7 +21,6 @@ class BinnedEDManager : public FitComponent{
 
     double Probability(const Event&) const;
     double BinProbability(size_t) const;
-    double BinProbability(size_t, double) const;
     double BinProbability(size_t, std::vector<double>) const;
     
     const std::vector<double>& GetNormalisations() const;

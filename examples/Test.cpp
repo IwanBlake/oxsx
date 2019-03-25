@@ -105,59 +105,6 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   ROOTNtuple dataNtp(dataFile, "nt");
   for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
     dataSetPdf.Fill(dataNtp.GetEntry(i));  
-  /*  
-  NuOsc dataoscSystematic("dataoscSystematic");
-  dataoscSystematic.SetAxes(axes);
-  dataoscSystematic.SetTransformationObs(dataRep);
-  dataoscSystematic.SetDistributionObs(dataRep);
-    
-  std::vector<double> preoscdataint = {1e6,5e5,5e5};
-  std::vector<double> postoscdataint;
-
-  BinnedED dataSetPdftemp("dataSetPdftemp",axes);
-  dataSetPdftemp.SetObservables(dataRep);
-  ROOTNtuple dataNtp(dataFile, "nt");
-  for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
-    dataSetPdftemp.Fill(dataNtp.GetEntry(i));  
-
-  dataSetPdftemp.Normalise();
-  int scale = 1e6;
-  dataSetPdftemp.Scale(scale);
-  
-  dataoscSystematic.SetFunction(new SurvProb(7.4e-5,0.297,240.22));
-  dataoscSystematic.Construct();
-  
-  BinnedED dataSetPdftemposc("dataSetPdftemposc",axes);
-  dataSetPdftemposc.SetObservables(dataRep);
-  
-  dataSetPdftemposc.Add(dataoscSystematic(dataSetPdftemp),1.);
-  int dataint = (int)(dataSetPdftemposc.Integral());
-  postoscdataint.push_back(dataint);
-  
-  dataSetPdf.Add(dataSetPdftemposc,1.);
-  
-  dataSetPdftemp.Normalise();
-  dataSetPdftemp.Scale(0.5*scale);
-  dataoscSystematic.SetFunction(new SurvProb(7.4e-5,0.297,340.37));
-  dataoscSystematic.Construct();
-
-  dataSetPdftemposc.Empty();
-  dataSetPdftemposc.Add(dataoscSystematic(dataSetPdftemp),1.);
-  dataint = (int)(dataSetPdftemposc.Integral());
-  postoscdataint.push_back(dataint);
-  
-  dataSetPdf.Add(dataSetPdftemposc,1.);
-  
-  dataSetPdftemp.Normalise();
-  dataSetPdftemp.Scale(0.47*scale);
-  dataoscSystematic.SetFunction(new SurvProb(7.4e-5,0.297,350.15));
-  dataoscSystematic.Construct();
-
-  dataSetPdftemposc.Empty();
-  dataSetPdftemposc.Add(dataoscSystematic(dataSetPdftemp),1.);
-  dataint = (int)(dataSetPdftemposc.Integral());
-  postoscdataint.push_back(dataint);
-  */
   
   ROOTNtuple reactorNtp(UnOscfile, "nt");
   NuOsc *reactorSystematic;
@@ -174,20 +121,21 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   
   BinnedNLLH lhFunction;
   lhFunction.SetBufferAsOverflow(true);
-  int Buff = 2;
-  lhFunction.SetBuffer(0,Buff,Buff);
+  int Buff = 1;
+  lhFunction.SetBuffer(1,Buff,Buff);
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   
   minima["d21"] = 5e-5;
   minima["s12"] = 0.2;
   maxima["d21"] = 9e-5;
   maxima["s12"] = 0.4;
-  initialval["d21"] = (r1->Uniform(minima["d21"],maxima["d21"]));//6.5e-5;
+  initialval["d21"] = (r1->Uniform(minima["d21"],maxima["d21"]));//5.5e-5;//6.5e-5;
   initialval["s12"] = (r1->Uniform(minima["s12"],maxima["s12"]));//0.3;
   std::cout<<"\n Initial d21:  "<<initialval["d21"]<<"\n"<<std::endl;
   std::cout<<" Initial s12:  "<<initialval["s12"]<<"\n"<<std::endl;
   initialerr["d21"] = 0.1*initialval["d21"];
   initialerr["s12"] = 0.1*initialval["s12"];
+  
   /*
   minima["mean"] = 2;
   minima["stdDev"] = 1;
@@ -229,7 +177,7 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
     minima[name] = 0;//Normmin;
     maxima[name] = 50000;//Normmax;
     initialval[name] = (rand*(maxima[name]-minima[name]))+minima[name];//flux*2000;
-    initialerr[name] = 0.1*initialval[name];
+    initialerr[name] = 0.5*initialval[name];
 
     sprintf(name,"osc_%s",reactorNames[i].c_str());
     std::cout<<name<<std::endl;
@@ -275,7 +223,7 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   //lhFunction.SetConstraint("ReactorPdf3_norm",500,1000);
 
   //lhFunction.SetConstraint("d21",7.37e-5,1.6e-6);
-  //lhFunction.SetConstraint("s12",0.297,0.016);
+  lhFunction.SetConstraint("s12",0.297,0.016);
 
   std::cout << "Built LH function " << std::endl;
   ////////////
@@ -298,7 +246,12 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   FitResult fitResult = min.Optimise(&lhFunction);
   ParameterDict bestFit = fitResult.GetBestFit();
   fitResult.SetPrintPrecision(6);
-  fitResult.Print();
+  //fitResult.Print();
+  bool fitValid = fitResult.GetValid();
+  if (fitValid)
+    fitResult.Print();
+  else
+    std::cout<<"INVALID FIT!!"<<std::endl;
   // fitvalid flag
   
   BinnedED * Result = new BinnedED("Result",axes);

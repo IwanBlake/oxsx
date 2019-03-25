@@ -19,14 +19,7 @@ BinnedNLLH::Evaluate(){
   
     if(!fDataSet && !fCalculatedDataDist) 
         throw LogicError("BinnedNNLH function called with no data set and no DataDist! set one of these first");
-    /*std::cout<<"\n \n 1)"<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-      }
-    */
+    
     if (!fCalculatedDataDist)
         BinData();
     
@@ -80,13 +73,13 @@ BinnedNLLH::Evaluate(){
       //for (size_t j = 0 ; j < groupsined.size(); j++){
       std::vector<std::string>::iterator it = std::find(fOscPdfs.begin(),fOscPdfs.end(),pdfname);
       if (it != fOscPdfs.end()){
-	//std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
-	//std::cout<<"ED: "<<pdfname<<std::endl;
+	  //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
+	  //std::cout<<"ED: "<<pdfname<<std::endl;
 	foundoscgroup = true;
 	//break;
       }//else
       //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
-      
+      //}
       if (foundoscgroup){
 	//std::cout<<fPdfManager.GetWorkingPdf(i).GetName()<<" "<<fPdfManager.GetWorkingPdf(i).Integral()<<std::endl;
 	osc_loss.push_back(fPdfManager.GetWorkingPdf(i).Integral());

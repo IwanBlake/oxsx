@@ -310,7 +310,7 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
 double lhmax = -1000000000;
 double lhmin = 1000000000;
 
-double LHFit(const std::string UnOscfile, const std::string dataFile, const std::string tempFile, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances,  double fluxfrac, int numbins, double Emin, double Emax, double Normmin, double Normmax, double d21fix, double s12fix,  int nhit1Min, int nhit1Max, int nhit2Min, int nhit2Max, double E1Min, double E1Max, double E2Min, double E2Max, double deltaT,double PromptRmax,double LateRmax){
+double LHFit(const std::string UnOscfile, const std::string dataFile, const std::string tempFile, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances,  double fluxfrac, int numbins, double Emin, double Emax, double Normmin, double Normmax, double d21fix, double s12fix,  int nhit1Min, int nhit1Max, int nhit2Min, int nhit2Max, double E1Min, double E1Max, double E2Min, double E2Max, double deltaT,double PromptRmax,double LateRmax, int unoscint){
   char name[100];
 
   TRandom3 *r1 = new TRandom3();
@@ -346,10 +346,16 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
  
   BinnedNLLH lhFunction;
   lhFunction.SetBufferAsOverflow(true);
-  int Buff = 3;
+  int Buff = 1;
   lhFunction.SetBuffer(0,Buff,Buff);  
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   double rand = r1->Rndm();
+
+  std::vector<double> reacfracs;
+  reacfracs.push_back(0.6923);
+  reacfracs.push_back(0.1558);
+  reacfracs.push_back(0.151874);
+
   for (int i = 0; i< numPdfs; i++){
     OscPromptE_EVindex(UnOscfile, tempFile,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,d21fix,s12fix,0.0215,reactorDistances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
     
@@ -359,17 +365,23 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
     ROOTNtuple reactorNtp(tempFile.c_str(), "nt");
     for(size_t j = 0; j < reactorNtp.GetNEntries(); j++)
       reactorPdf->Fill(reactorNtp.GetEntry(j));
+    std::cout<<"pre osc Int: "<<unoscint<<std::endl;
+    int postoscint = (int)(reactorPdf->Integral());
+    std::cout<<"post osc Int: "<<postoscint<<std::endl;
+    double osc_loss = postoscint/unoscint;
+    std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
     reactorPdf->Normalise();
 
     // Setting optimisation limits
     sprintf(name,"%s_norm",reactorNames[i].c_str());
     minima[name] = 0;//Normmin;
-    maxima[name] = fluxfrac*20000;//Normmax;
+    maxima[name] = 50000;//fluxfrac*20000;//Normmax;
     initialval[name] = (rand*(maxima[name]-minima[name]))+minima[name];
-    initialerr[name] = 0.1*initialval[name];
+    initialerr[name] = 0.5*initialval[name];
     
     lhFunction.AddDist(*reactorPdf);
-   
+    double constraint = unoscint * osc_loss * reacfracs[i];
+    lhFunction.SetConstraint(name, constraint, 0.5*constraint);
     // CONSTRAINT ON NORMALISATION
     // eg.          (will probably need to make vectors, 3d map of reactor pdfs, their norm contraint mean and uncertainty
     //lhFunction.SetConstraint(name,7591,380);
@@ -380,12 +392,13 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
   ////////////
   Minuit min;
   min.SetMethod("Migrad");
-  min.SetMaxCalls(1000000);
+  min.SetMaxCalls(10000000);
+  min.SetTolerance(0.001);
   min.SetMinima(minima);
   min.SetMaxima(maxima);
   min.SetInitialValues(initialval);
   min.SetInitialErrors(initialerr);
-
+  
   /////////////////////////////////////////////
   ////////        Fit Result        ///////////
   /////////////////////////////////////////////
@@ -415,6 +428,7 @@ int main(int argc, char *argv[]) {
   else{
     //desired (flux)/(MC produced flux)
     double fluxfrac = 1;
+    int unoscint = 33134;
     /*
     double s12min = 0.025;
     double s12max = 1.;
@@ -503,7 +517,7 @@ int main(int argc, char *argv[]) {
 	std::cout<<""<<std::endl;
 	std::cout<<"bin x: "<<i<<"    (from "<<1<<" to "<<num_s12<<")"<<std::endl;
 	std::cout<<"bin y: "<<j<<"    (from "<<1<<" to "<<num_d21<<")"<<std::endl;
-	double LHval = LHFit(UnOscfile,dataFile,tempFile,numPdfs,reactorNames,distances,fluxfrac,numbins,Emin,Emax,Normmin,Normmax,d21,s12,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax);
+	double LHval = LHFit(UnOscfile,dataFile,tempFile,numPdfs,reactorNames,distances,fluxfrac,numbins,Emin,Emax,Normmin,Normmax,d21,s12,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,unoscint);
 	LHmean += LHval;	
 	h2->SetBinContent(i,j,LHval);
 	//printf("-------------------------------------------------------------------------------------\n");
