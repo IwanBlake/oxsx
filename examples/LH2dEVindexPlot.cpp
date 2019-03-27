@@ -45,6 +45,8 @@
 #include <ROOTMultiPlot.h>
 #include <TRandom3.h>
 
+bool badfit = true;
+
 //Surv Probablity function for antinu of KE nuE and distance traveled of baseline.
 double probability(double nuE, double baseline, double delmsqr21, double sinsqrtheta12, double sinsqrtheta13) {
   double fSSqr2Theta12 = pow(sin(2.0 * TMath::ASin(sqrt(sinsqrtheta12))), 2.0);
@@ -310,7 +312,8 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
 double lhmax = -1000000000;
 double lhmin = 1000000000;
 
-double LHFit(const std::string UnOscfile, const std::string dataFile, const std::string tempFile, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances,  double fluxfrac, int numbins, double Emin, double Emax, double Normmin, double Normmax, double d21fix, double s12fix,  int nhit1Min, int nhit1Max, int nhit2Min, int nhit2Max, double E1Min, double E1Max, double E2Min, double E2Max, double deltaT,double PromptRmax,double LateRmax, int unoscint){
+//double LHFit(const std::string UnOscfile, const std::string dataFile, AxisCollection axes, BinnedED dataSetPdf, const std::string tempFile, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances,  double fluxfrac, int numbins, double Emin, double Emax, double Normmin, double Normmax, double d21fix, double s12fix,  int nhit1Min, int nhit1Max, int nhit2Min, int nhit2Max, double E1Min, double E1Max, double E2Min, double E2Max, double deltaT,double PromptRmax,double LateRmax, int unoscint){
+double LHFit(const std::string UnOscfile, const std::string dataFile, AxisCollection axes, BinnedED dataSetPdf, const std::string tempFile, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances,  double fluxfrac, int numbins, double Emin, double Emax, double Normmin, double Normmax, double d21fix, double s12fix,  int nhit1Min, int nhit1Max, int nhit2Min, int nhit2Max, double E1Min, double E1Max, double E2Min, double E2Max, double deltaT,double PromptRmax,double LateRmax, int unoscint, std::vector<double> datanorms){
   char name[100];
 
   TRandom3 *r1 = new TRandom3();
@@ -319,25 +322,7 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
   ////////////////////
   // 1. Set Up PDFs //
   ////////////////////
-
-  // Only interested in first bit of data ntuple
-  ObsSet dataRep(0);
-  // Set up binning
-  AxisCollection axes;
-  axes.AddAxis(BinAxis("ParKE", Emin, Emax, numbins));
-
-  BinnedED dataSetPdf("dataSetPdf",axes);
-  dataSetPdf.SetObservables(dataRep);
-  ROOTNtuple dataNtp(dataFile, "nt");
- 
-  for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
-    dataSetPdf.Fill(dataNtp.GetEntry(i));
-
-  // Can scale data spectrum to desired length of time running (quite approximately)
-  // fluxfrac defined as Desired_Flux/Produced_Data_Flux
-  int dataint = (int)(fluxfrac*dataSetPdf.Integral());
-  dataSetPdf.Normalise();
-  dataSetPdf.Scale(dataint);
+  
   
   ParameterDict minima;
   ParameterDict maxima;
@@ -368,20 +353,21 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
     std::cout<<"pre osc Int: "<<unoscint<<std::endl;
     int postoscint = (int)(reactorPdf->Integral());
     std::cout<<"post osc Int: "<<postoscint<<std::endl;
-    double osc_loss = postoscint/unoscint;
+    double osc_loss = postoscint/(double)unoscint;
     std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
     reactorPdf->Normalise();
 
     // Setting optimisation limits
     sprintf(name,"%s_norm",reactorNames[i].c_str());
     minima[name] = 0;//Normmin;
-    maxima[name] = 50000;//fluxfrac*20000;//Normmax;
+    maxima[name] = 500;//fluxfrac*20000;//Normmax;
     initialval[name] = (rand*(maxima[name]-minima[name]))+minima[name];
     initialerr[name] = 0.5*initialval[name];
     
     lhFunction.AddDist(*reactorPdf);
-    double constraint = unoscint * osc_loss * reacfracs[i];
-    lhFunction.SetConstraint(name, constraint, 0.5*constraint);
+    //double constraint = unoscint * osc_loss * reacfracs[i];
+    double constraint = datanorms[i] * osc_loss;
+    lhFunction.SetConstraint(name, constraint, 0.1*constraint);
     // CONSTRAINT ON NORMALISATION
     // eg.          (will probably need to make vectors, 3d map of reactor pdfs, their norm contraint mean and uncertainty
     //lhFunction.SetConstraint(name,7591,380);
@@ -402,11 +388,19 @@ double LHFit(const std::string UnOscfile, const std::string dataFile, const std:
   /////////////////////////////////////////////
   ////////        Fit Result        ///////////
   /////////////////////////////////////////////
-
   FitResult fitResult = min.Optimise(&lhFunction);
   ParameterDict bestFit = fitResult.GetBestFit();
-  fitResult.Print();
 
+  bool fitValid = fitResult.GetValid();
+  if (fitValid){
+    fitResult.Print();
+    badfit = false;
+    std::cout<<"goodfit!"<<std::endl;
+  }else{
+    std::cout<<"INVALID FIT!! \n Trying Again:"<<std::endl;
+    badfit = true;
+  }
+  
   lhFunction.SetParameters(bestFit);
   double lhval =(-1)*lhFunction.Evaluate();
   if (lhval > lhmax)
@@ -428,8 +422,8 @@ int main(int argc, char *argv[]) {
   else{
     //desired (flux)/(MC produced flux)
     double fluxfrac = 1;
-    int unoscint = 33134;
-    /*
+    int unoscint = 396438;//33134;
+    
     double s12min = 0.025;
     double s12max = 1.;
     double d21min = 6.0e-5;//3.2e-5;
@@ -437,22 +431,23 @@ int main(int argc, char *argv[]) {
     
     double s12int = 0.025;
     double d21int = 0.05e-5;
-    */
+    
+    /*
     //for quick testing vv
     double s12min = 0.2;
     double s12max = 0.4;
     double d21min = 6e-5;
     double d21max = 9.0e-5;
     
-    double s12int = 0.05;
+    double s12int = 0.1;
     double d21int = 0.5e-5;
-
+    */
     //axes range and number of bins, must not include any bins with zero entries!!!
     double Emin = 1.;
     double Emax = 8.;
-    int numbins = 40;
+    int numbins = 21;
     double Normmin = 0;
-    double Normmax = 100000;
+    double Normmax = 50000;
 
     double Num_s12 = ((s12max-s12min)/s12int)+1;
     double Num_d21 = ((d21max-d21min)/d21int)+1;
@@ -503,6 +498,57 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i< numPdfs; i++){
       std::cout<<"Reactor name: "<<reactorNames[i]<<" Distance:"<<distances[i]<<std::endl;
     }
+
+    //SET UP DATA PDFS
+    // Only interested in first bit of data ntuple
+    ObsSet dataRep(0);
+    // Set up binning
+    AxisCollection axes;
+    axes.AddAxis(BinAxis("ParKE", Emin, Emax, numbins));
+
+    /*
+      BinnedED dataSetPdf("dataSetPdf",axes);
+      dataSetPdf.SetObservables(dataRep);
+      ROOTNtuple dataNtp(dataFile, "nt");
+ 
+      for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
+      dataSetPdf.Fill(dataNtp.GetEntry(i));
+    */
+    // Can scale data spectrum to desired length of time running (quite approximately)
+    // fluxfrac defined as Desired_Flux/Produced_Data_Flux
+    //int dataint = (int)(fluxfrac*dataSetPdf.Integral());
+    //dataSetPdf.Normalise();
+    //dataSetPdf.Scale(dataint);
+  
+    BinnedED dataSetPdf("dataSetPdf",axes);
+    dataSetPdf.SetObservables(dataRep);
+  
+    std::vector<double> datanorms;
+    datanorms.push_back(93.);
+    datanorms.push_back(21.);
+    datanorms.push_back(20.);
+
+    for (int i = 0; i< numPdfs; i++){
+      OscPromptE_EVindex(UnOscfile, tempFile,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,7.4e-5,0.297,0.0215,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
+    
+      BinnedED *dataPdf = new BinnedED(reactorNames[i],axes);
+      dataPdf->SetObservables(0);
+    
+      ROOTNtuple dataNtp(tempFile.c_str(), "nt");
+      for(size_t j = 0; j < dataNtp.GetNEntries(); j++)
+	dataPdf->Fill(dataNtp.GetEntry(j));
+
+      std::cout<<"pre osc Int: "<<unoscint<<std::endl;
+      int postoscint = (int)(dataPdf->Integral());
+      std::cout<<"post osc Int: "<<postoscint<<std::endl;
+      double osc_loss = postoscint/(double)unoscint;
+      std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
+    
+      dataPdf->Normalise();
+      dataPdf->Scale(datanorms[i]*osc_loss);
+  
+      dataSetPdf.Add(*dataPdf,1);
+    } 
     
     double LHmean = 0;
     for (int i=1; i < num_s12+1; i++){
@@ -517,7 +563,15 @@ int main(int argc, char *argv[]) {
 	std::cout<<""<<std::endl;
 	std::cout<<"bin x: "<<i<<"    (from "<<1<<" to "<<num_s12<<")"<<std::endl;
 	std::cout<<"bin y: "<<j<<"    (from "<<1<<" to "<<num_d21<<")"<<std::endl;
-	double LHval = LHFit(UnOscfile,dataFile,tempFile,numPdfs,reactorNames,distances,fluxfrac,numbins,Emin,Emax,Normmin,Normmax,d21,s12,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,unoscint);
+	double LHval;
+	int fitattempts = 0;
+	badfit = true;
+	while (badfit){
+	  fitattempts += 1;
+	  std::cout<<"fit attempt: "<<fitattempts<<std::endl;
+	  //LHval = LHFit(UnOscfile,dataFile,axes,dataSetPdf,tempFile,numPdfs,reactorNames,distances,fluxfrac,numbins,Emin,Emax,Normmin,Normmax,d21,s12,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,unoscint);
+	  LHval = LHFit(UnOscfile,dataFile,axes,dataSetPdf,tempFile,numPdfs,reactorNames,distances,fluxfrac,numbins,Emin,Emax,Normmin,Normmax,d21,s12,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,unoscint,datanorms);
+	}
 	LHmean += LHval;	
 	h2->SetBinContent(i,j,LHval);
 	//printf("-------------------------------------------------------------------------------------\n");
@@ -537,7 +591,11 @@ int main(int argc, char *argv[]) {
 	}
       }
       }*/
-    
+
+    TH1D DataHist;
+    DataHist = DistTools::ToTH1D(dataSetPdf);
+    DataHist.SetName("DataHist");
+
     h2->GetXaxis()->SetTitle("(sintheta12)^2");
     h2->GetXaxis()->SetTitleSize(0.05);
     h2->GetXaxis()->SetTitleOffset(0.9);
@@ -553,6 +611,7 @@ int main(int argc, char *argv[]) {
     std::cout<<"LH MIN VAL:   "<<lhmin<<std::endl;
     TFile *fileOut = new TFile(outFile.c_str(),"RECREATE");
     h2->Write();
+    DataHist.Write();
     fileOut->Close();
   }
 }

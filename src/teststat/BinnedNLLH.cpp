@@ -9,13 +9,13 @@
 #include <iostream>
 #include <vector>
 
-int stepcount = 0;
+//int stepcount = 0;
 
 double 
 BinnedNLLH::Evaluate(){
-    if (stepcount % 10 == 0)
-      std::cout<<stepcount<<std::endl; 
-    stepcount += 1;
+  //if (stepcount % 10 == 0)
+  //  std::cout<<stepcount<<std::endl; 
+  //stepcount += 1;
   
     if(!fDataSet && !fCalculatedDataDist) 
         throw LogicError("BinnedNNLH function called with no data set and no DataDist! set one of these first");

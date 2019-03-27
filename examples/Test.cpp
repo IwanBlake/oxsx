@@ -126,15 +126,15 @@ void LHFit(const std::string UnOscfile, const std::string dataFile, int numPdfs,
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   
   minima["d21"] = 5e-5;
-  minima["s12"] = 0.2;
+  minima["s12"] = 0.1;
   maxima["d21"] = 9e-5;
-  maxima["s12"] = 0.4;
+  maxima["s12"] = 0.5;
   initialval["d21"] = (r1->Uniform(minima["d21"],maxima["d21"]));//5.5e-5;//6.5e-5;
   initialval["s12"] = (r1->Uniform(minima["s12"],maxima["s12"]));//0.3;
   std::cout<<"\n Initial d21:  "<<initialval["d21"]<<"\n"<<std::endl;
   std::cout<<" Initial s12:  "<<initialval["s12"]<<"\n"<<std::endl;
-  initialerr["d21"] = 0.1*initialval["d21"];
-  initialerr["s12"] = 0.1*initialval["s12"];
+  initialerr["d21"] = 0.5*initialval["d21"];
+  initialerr["s12"] = 0.5*initialval["s12"];
   
   /*
   minima["mean"] = 2;
