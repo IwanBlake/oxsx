@@ -426,8 +426,8 @@ int main(int argc, char *argv[]) {
     
     double s12min = 0.025;
     double s12max = 1.;
-    double d21min = 6.0e-5;//3.2e-5;
-    double d21max = 8.8e-5;//6.e-5;
+    double d21min = 3.4e-5;//6.0e-5;
+    double d21max = 6.2e-5;//8.8e-5;
     
     double s12int = 0.025;
     double d21int = 0.05e-5;
@@ -436,8 +436,8 @@ int main(int argc, char *argv[]) {
     //for quick testing vv
     double s12min = 0.2;
     double s12max = 0.4;
-    double d21min = 6e-5;
-    double d21max = 9.0e-5;
+    double d21min = 3.5e-5;//6e-5;
+    double d21max = 6.4e-5;//9.0e-5;
     
     double s12int = 0.1;
     double d21int = 0.5e-5;
@@ -504,7 +504,7 @@ int main(int argc, char *argv[]) {
     ObsSet dataRep(0);
     // Set up binning
     AxisCollection axes;
-    axes.AddAxis(BinAxis("ParKE", Emin, Emax, numbins));
+    axes.AddAxis(BinAxis("EPrompt (MeV)", Emin, Emax, numbins));
 
     /*
       BinnedED dataSetPdf("dataSetPdf",axes);
@@ -529,7 +529,7 @@ int main(int argc, char *argv[]) {
     datanorms.push_back(20.);
 
     for (int i = 0; i< numPdfs; i++){
-      OscPromptE_EVindex(UnOscfile, tempFile,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,7.4e-5,0.297,0.0215,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
+      OscPromptE_EVindex(UnOscfile, tempFile,nhit1Min,nhit1Max,nhit2Min,nhit2Max,E1Min,E1Max,E2Min,E2Max,deltaT,PromptRmax,LateRmax,4.8e-5,0.297,0.0215,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
     
       BinnedED *dataPdf = new BinnedED(reactorNames[i],axes);
       dataPdf->SetObservables(0);
@@ -555,7 +555,7 @@ int main(int argc, char *argv[]) {
       for (int j=1; j < num_d21+1; j++){
 	double s12 = s12min+((i-1)*s12int);
 	double d21 = d21min+((j-1)*d21int); 
-	//printf("\n-------------------------------------------------------------------------------------\n");
+	//printf("\n-x------------------------------------------------------------------------------------\n");
 	k+=1;
 	std::cout<<"point: "<<k<<" of "<<num_s12*num_d21<<std::endl;
 	std::cout<<"s12: "<<s12<<"    (from "<<s12min<<" to "<<s12max<<")"<<std::endl;
