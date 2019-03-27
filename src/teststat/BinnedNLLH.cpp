@@ -27,171 +27,50 @@ BinnedNLLH::Evaluate(){
         fDataDist = fPdfShrinker.ShrinkDist(fDataDist);
         fAlreadyShrunk = true;
     }
-    /*
-    std::cout<<"\n 2) AlreadyShrunk"<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
+
     // Construct systematics 
     fSystematicManager.Construct(); 
-    /*
-    std::cout<<"\n 3) Constructed Sys"<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
+
     // Apply systematics
     fPdfManager.ApplySystematics(fSystematicManager);
-    /*
-    std::cout<<"\n 4) Applied Sys "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
-    
-    //check num working pdfs == getNPdfs?
-    //swap osc_loss vector with map to ensure getting correct loss for each pdf?
 
-    //int numpdfs = fPdfManager.GetNPdfs();
-    //double * osc_loss [numpdfs];
     std::vector<double> osc_loss;
-    //std::vector<std::string> osc_loss_pdfnames;
+
+    //find loss in events due to oscillation
     for (size_t i = 0 ; i < fPdfManager.GetNPdfs(); i++){
       bool foundoscgroup = false;
       std::string pdfname = fPdfManager.GetWorkingPdf(i).GetName();
-      //std::vector<std::string> groupsined = fSystematicManager.GetGroupsfromED(pdfname);
-      //for (size_t j = 0 ; j < groupsined.size(); j++){
+
       std::vector<std::string>::iterator it = std::find(fOscPdfs.begin(),fOscPdfs.end(),pdfname);
-      if (it != fOscPdfs.end()){
-	  //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<" CHANGE NORM!!"<<std::endl;
-	  //std::cout<<"ED: "<<pdfname<<std::endl;
+      if (it != fOscPdfs.end())
 	foundoscgroup = true;
-	//break;
-      }//else
-      //std::cout<<"ED: "<<pdfname<<" sys group: "<<groupsined[j]<<std::endl;
-      //}
-      if (foundoscgroup){
-	//std::cout<<fPdfManager.GetWorkingPdf(i).GetName()<<" "<<fPdfManager.GetWorkingPdf(i).Integral()<<std::endl;
+      if (foundoscgroup)
 	osc_loss.push_back(fPdfManager.GetWorkingPdf(i).Integral());
-	//osc_loss_pdfnames.push_back(pdfname + "_norm");
-      }else//{
+      else
 	osc_loss.push_back(1.);
-      //osc_loss_pdfnames.push_back(pdfname);
-      //}
-      //std::cout<<" "<<std::endl;
     }
-    //std::cout<<"\n"<<std::endl;
-    
-    //double osc_loss = fPdfManager.GetWorkingPdf(0).Integral();
-    
-    /*std::vector<double> oscnormalisations = fPdfManager.GetNormalisations();
-    for (size_t i = 0; i < oscnormalisations.size(); i++)
-      oscnormalisations[i] = oscnormalisations[i] * osc_loss;
-    fPdfManager.SetNormalisations(oscnormalisations);
-    
-    std::cout<<"\n 5) changed norm "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
     
     // Apply Shrinking
     fPdfManager.ApplyShrink(fPdfShrinker);
     
-    /*std::cout<<"\n 6) AppliedShrink "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
-    //std::cout<<"\n"<<std::endl;
     // loop over bins and calculate the likelihood
     double nLogLH = 0;
-    //std::cout<<"fdatadist bins: "<<fDataDist.GetNBins()<<std::endl;
     for(size_t i = 0; i < fDataDist.GetNBins(); i++){
-      //std::cout<<fDataDist.GetBinContent(i)<<std::endl;
-      //double prob = fPdfManager.BinProbability(i);
-      //std::cout<<"oscloss"<<std::endl;
       double prob = fPdfManager.BinProbability(i, osc_loss);
         if(!prob)
             throw std::runtime_error("BinnedNLLH::Encountered zero probability bin!");
         nLogLH -= fDataDist.GetBinContent(i) *  log(prob);        
     }
-    /*
-    std::cout<<"\n 7) Calculated LH basic "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
+
     // Extended LH correction
     const std::vector<double>& normalisations = fPdfManager.GetNormalisations();
     for(size_t i = 0; i < normalisations.size(); i++)
       nLogLH += osc_loss[i] * normalisations.at(i);
-      //nLogLH += normalisations.at(i);
     
-    /*std::cout<<"\n 8) Extended LH "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-    }
-    */
-    
-    //don't need to change this part, osc_loss parameters don't affect calculation?
-    //get rid of finding functions and just insist constraints must be placed in the same order??
-    // Constraints
-    /*for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
-        it != fConstraints.end(); ++it){
-        std::vector<std::string>::iterator pdfnameit = std::find(osc_loss_pdfnames.begin(), osc_loss_pdfnames.end(), it->first);
-	if (pdfnameit != osc_loss_pdfnames.end()){
-	  int pdfnameindex = std::distance(osc_loss_pdfnames.begin(), pdfnameit);
-	  //std::cout<<"Constraint name: "<<it->first<<" pdf name + _norm: "<<osc_loss_pdfnames[pdfnameindex]<<std::endl;
-	  
-	  nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first),osc_loss[pdfnameindex]);
-	}
-	else{
-	  //std::cout<<"NOT OSCILLATED PDF NORM CONSTRAINT: "<<it->first<<std::endl;
-	  nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
-	}
-    }
-    */
-    
-    // Constraints
     for(std::map<std::string, QuadraticConstraint>::iterator it = fConstraints.begin();
         it != fConstraints.end(); ++it)      
         nLogLH += it->second.Evaluate(fComponentManager.GetParameter(it->first));
     
-
-    /*for (size_t i = 0; i < oscnormalisations.size(); i++)
-    oscnormalisations[i] = (oscnormalisations[i]/osc_loss);
-    fPdfManager.SetNormalisations(oscnormalisations);
-    
-    std::cout<<"\n 9) Changed norms back "<<std::endl;
-    for (size_t i = 0; i < fPdfManager.GetNormalisations().size(); i++){
-      std::cout<<"Norm: "<<fPdfManager.GetNormalisations()[i]<<std::endl;;
-    }
-    for (size_t i = 0; i < 1; i++){
-      std::cout<<"Integral: "<<fPdfManager.GetWorkingPdf(0).Integral()<<std::endl;;
-      }*/
 
     return nLogLH;
 }
@@ -278,12 +157,6 @@ BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_){
     fSystematicManager.Add(sys_, group_);
 }
 
-/*void
-BinnedNLLH::AddSystematic(Systematic* sys_, const std::string&  group_, const bool ifosc){
-    if (ifosc)
-      fIfOscSystematics.push_back(group_);
-    fSystematicManager.Add(sys_, group_);
-    }*/
 
 void
 BinnedNLLH::SetDataSet(DataSet* dataSet_){
@@ -341,18 +214,7 @@ BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vecto
     for(size_t i = 0; i <sys_.size(); i++)
         AddSystematic(sys_.at(i), groups_.at(i));
 }
-/*
-void
-BinnedNLLH::AddSystematics(const std::vector<Systematic*> sys_, const std::vector<std::string> & groups_, const std::vector<bool> ifosc){
-    if (groups_.size() != sys_.size())
-       throw DimensionError(Formatter()<<"BinnedNLLH:: #sys_ != #group_");
-    for(size_t i = 0; i <sys_.size(); i++){
-        AddSystematic(sys_.at(i), groups_.at(i));
-	if (ifosc[i])
-	  fIfOscSystematics.push_back(groups_.at(i));
-    }
-}
-*/
+
 void
 BinnedNLLH::SetNormalisations(const std::vector<double>& norms_){    
     fPdfManager.SetNormalisations(norms_);

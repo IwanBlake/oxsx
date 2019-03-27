@@ -83,11 +83,6 @@ BinnedEDManager::GetWorkingPdf(size_t index_) const{
     return fWorkingPdfs.at(index_);
 }
 
-//const std::vector<BinnedED>&
-//BinnedEDManager::GetWorkingPdfs() const{
-//  return fWorkingPdfs;
-//}
-
 void
 BinnedEDManager::AddPdf(const BinnedED& pdf_){
     fOriginalPdfs.push_back(pdf_);
