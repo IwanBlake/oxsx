@@ -10,7 +10,7 @@ import sensitivity_util as sutil
 import ROOT
 ROOT.gROOT.SetBatch(True) # ROOT in batch mode
 
-#import scipy.stats as st
+import scipy.stats as st
 
 #ENVIRONMENT_PATH = "/home/blakei/env_rat-6.3.6.sh"
 ENVIRONMENT_PATH = "/home/blakei/Env_rat-KL.sh"
@@ -326,11 +326,11 @@ def H2Contour():
     lh2d.SetContour(3,contours)
     
     ###### 1 ########
-    #lh2d.Draw("colz")
-    #lh2d.SetMinimum(Max - delL3)
+    lh2d.Draw("colz")
+    lh2d.SetMinimum(Max - delL3)
     
     ###### 2 #######
-    lh2d.Draw("contz same")
+    #lh2d.Draw("contz same")
     
     c.SetLeftMargin(0.2)
     c.SetRightMargin(0.2)
