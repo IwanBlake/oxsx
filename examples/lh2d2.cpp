@@ -140,7 +140,7 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
   in.close();
 }
 
-double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, const std::string tempFile, AxisCollection axes, BinnedED dataSetPdf, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances, std::vector<std::string> reactorTypes, double d21fix, double s12fix, double s13fix,std::vector<double> normconstraints,int Normmin, int Normmax, std::vector<double> normconstraintsuncert){
+double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, const std::string tempFile, AxisCollection axes, BinnedED dataSetPdf, int numPdfs, std::vector<std::string> reactorNames, std::vector<double> reactorDistances, std::vector<std::string> reactorTypes, double d21fix, double s12fix, double s13fix,std::vector<double> normconstraints,int Normmin, int Normmax, std::vector<double> normconstraintsuncert, const bool isFakeData){
   
   char name[100];
   TRandom3 *r1 = new TRandom3();
@@ -180,19 +180,29 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
     normconstraints[i] = normconstraints[i]*osc_loss;
     oscconstraintint += normconstraints[i];
   }
+
+  if (!isFakeData){ 
+    //renomalising oscillated constraints, to KL Oscillated spectrum integral
+    double DataInt = dataSetPdf.Integral();
+    std::cout<<" Data Integral: "<<DataInt<<std::endl;
+    double oscrenormInt = 0.;
+    for (int i = 0; i < numPdfs; i++){
+      normconstraints[i] = ((normconstraints[i]/oscconstraintint)*DataInt); 
+      oscrenormInt += normconstraints[i];
+      std::cout<<reactorNames[i]<<"   mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
+    }
   
-  //renomalising oscillated constraints, to KL Oscillated spectrum integral
-  double DataInt = dataSetPdf.Integral();
-  std::cout<<" Data Integral: "<<DataInt<<std::endl;
-  double oscrenormInt = 0.;
-  for (int i = 0; i < numPdfs; i++){
-    normconstraints[i] = ((normconstraints[i]/oscconstraintint)*DataInt); 
-    oscrenormInt += normconstraints[i];
-    std::cout<<reactorNames[i]<<"   mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
+    std::cout<<"\n Integral of measured (oscillated) KL Data: "<<DataInt<<std::endl;
+    std::cout<<" Integral of oscillated renormalised constraints: "<<oscrenormInt<<"\n"<<std::endl;
+  }else{
+    double DataInt = dataSetPdf.Integral();
+    std::cout<<" Data Integral: "<<DataInt<<std::endl;
+    for (int i = 0; i < numPdfs; i++)
+      std::cout<<reactorNames[i]<<"   mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
+    
+    std::cout<<" Integral of input FakeData: "<<DataInt<<"\n"<<std::endl;
+    std::cout<<" Integral of oscillated constraints: "<<oscconstraintint<<"\n"<<std::endl;
   }
-  
-  std::cout<<"\n Integral of measured (oscillated) KL Data: "<<DataInt<<std::endl;
-  std::cout<<" Integral of oscillated renormalised constraints: "<<oscrenormInt<<"\n"<<std::endl;
   
   for (int i = 0; i < numPdfs; i++){
     if (reactorTypes[i] == "PHWR")
@@ -397,15 +407,23 @@ int main(int argc, char *argv[]) {
     
     std::stringstream data_constraintsstream;
     const std::string &data_constraintsFile= argv[2];
+
+    bool isFakeData;
     
-    if (argc == NoFakeDataArgc)
+    if (argc == NoFakeDataArgc){
+      std::cout<<"\n Not Using Fake Data!! \n"<<std::endl;
       data_constraintsstream<<data_constraintsFile;
+      isFakeData = false;
+    }
     else if(argc == FakeDataArgc){
+      std::cout<<"\n Using Fake Data!! \n"<<std::endl;
       double FakeDatad21 = atof(argv[15]);
       double FakeDatas12 = atof(argv[16]);
       double FakeDatas13 = atof(argv[17]);
       
       data_constraintsstream<<data_constraintsFile<<"ds21_"<<FakeDatad21<<"s12_"<<FakeDatas12<<"s13_"<<FakeDatas13;
+
+      isFakeData = true;
     }
     else{
       std::cout<<"Wrong number of arguments!!"<<std::endl;
@@ -490,7 +508,7 @@ int main(int argc, char *argv[]) {
     while (badfit){
       fitattempts += 1;
       std::cout<<"fit attempt: "<<fitattempts<<std::endl;
-      LHval = LHFit(PHWRUnOscfile,PWRUnOscfile,tempFile,axes,dataSetPdf,numPdfs,reactorNames,distances,reactorTypes,d21,s12,s13,normconstraints,Normmin,Normmax,normconstraintsuncert);
+      LHval = LHFit(PHWRUnOscfile,PWRUnOscfile,tempFile,axes,dataSetPdf,numPdfs,reactorNames,distances,reactorTypes,d21,s12,s13,normconstraints,Normmin,Normmax,normconstraintsuncert,isFakeData);
     }
     
     int bin_i = atoi(argv[7]);

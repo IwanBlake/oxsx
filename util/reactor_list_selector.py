@@ -365,6 +365,8 @@ def main(args):
         reactor_ratdb_info = get_reactor_ratdb_info(args.REACTORS_filename)
         reactor_status_ratdb_info = get_reactor_status_ratdb_info(args.REACTORS_STATUS_filename)
 
+        position = args.position
+        
         reactor_info = get_reactor_info(reactor_ratdb_info, \
             reactor_status_ratdb_info,\
             reactor_list_name, \
