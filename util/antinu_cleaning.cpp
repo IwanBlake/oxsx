@@ -14,11 +14,11 @@
 #include <TRandom3.h>
 #include <TStyle.h>
 
-/*double correction(double x){
-  double correc = 8.83411e-02 + (9.02287e-03)*x;
+double correction(double x){
+  double correc = 7.81674e-02 + (1.13421e-02)*x;
   return correc;
 }
-*/
+
 
 //AVERAGE
 double Average(std::vector<double> v)
@@ -241,10 +241,8 @@ void process_cuts(const std::string filename_input, const std::string filename_o
 		      //if (nhit2Min <= nextnhit && nextnhit <= nhit2Max){
 		
 		      //if want to correc energies
-		      //double corrected_ev_energy = ev_energy + correction(ev_energy);
-		      //if (energy_ep_min <= corrected_ev_energy && corrected_ev_energy <= energy_ep_max){
-		      //double corrected_ev_next_energy = nextEnergy + correction(nextEnergy);
-		      //if (energy_n_min <= corrected_ev_next_energy && corrected_ev_next_energy <= energy_n_max){
+		      ev_energy = ev_energy + correction(ev_energy);
+		      ev_next_energy = ev_next_energy + correction(ev_next_energy);
 		      if (energy_ep_min <= ev_energy && ev_energy <= energy_ep_max){
 			if (energy_n_min <= ev_next_energy && ev_next_energy <= energy_n_max){ //|| (4. <= nextEnergycorrec && nextEnergycorrec <= 5.8)){ //if want to allow for carbon capture?
 			  //EPromptvsEDelay2Cut.Fill(ev_energy,ev_next_energy);
@@ -435,10 +433,8 @@ void process_cuts(const std::string filename_input, const std::string filename_o
 		  //if (nhit2Min <= nextnhit && nextnhit <= nhit2Max){
 		
 		  //if want to correc energies
-		  //double corrected_ev_energy = ev_energy + correction(ev_energy);
-		  //if (energy_ep_min <= corrected_ev_energy && corrected_ev_energy <= energy_ep_max){
-		  //double corrected_ev_next_energy = nextEnergy + correction(nextEnergy);
-		  //if (energy_n_min <= corrected_ev_next_energy && corrected_ev_next_energy <= energy_n_max){
+		  ev_energy = ev_energy + correction(ev_energy);
+		  ev_next_energy = ev_next_energy + correction(ev_next_energy);
 		  if (energy_ep_min <= ev_energy && ev_energy <= energy_ep_max){
 		    if (energy_n_min <= ev_next_energy && ev_next_energy <= energy_n_max){ //|| (4. <= nextEnergycorrec && nextEnergycorrec <= 5.8)){ //if want to allow for carbon capture?
 		      //EPromptvsEDelay2Cut.Fill(ev_energy,ev_next_energy);
