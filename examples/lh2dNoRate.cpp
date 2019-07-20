@@ -150,7 +150,6 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   // 1. Set Up PDFs //
   ////////////////////
   
-  
   ParameterDict minima;
   ParameterDict maxima;
   ParameterDict initialval;
@@ -162,6 +161,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   lhFunction.SetBuffer(0,Buff,Buff);  
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   double rand = r1->Rndm();
+
 
   // allowing for oscillation of constraints, calculating the generator's predicted oscillated total integral
   double oscconstraintint = 0.;
@@ -179,8 +179,11 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
     std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
     normconstraints[i] = normconstraints[i]*osc_loss;
     oscconstraintint += normconstraints[i];
+
   }
 
+  
+  
   if (!isFakeData){ 
     //renomalising oscillated constraints, to KL Oscillated spectrum integral
     double DataInt = dataSetPdf.Integral();
@@ -189,7 +192,8 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
     for (int i = 0; i < numPdfs; i++){
       normconstraints[i] = ((normconstraints[i]/oscconstraintint)*DataInt); 
       oscrenormInt += normconstraints[i];
-      std::cout<<reactorNames[i]<<"   mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
+      std::cout<<reactorNames[i]<<"   \n mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
+      
     }
   
     std::cout<<"\n Integral of measured (oscillated) KL Data: "<<DataInt<<std::endl;
@@ -232,14 +236,14 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
     minima[name] = Normmin;
     maxima[name] = Normmax;
     
-    double sigma = (normconstraintsuncert[i]*normconstraints[i]);
-    
+    double sigma = (normconstraintsuncert[i]*normconstraints[i]);    
     initialval[name] = normconstraints[i];//(rand*(maxima[name]-minima[name]))+minima[name];
     initialerr[name] = sigma;//0.5*initialval[name];
     
     lhFunction.AddDist(*reactorPdf);
     lhFunction.SetConstraint(name, normconstraints[i], sigma);
     std::cout<<reactorNames[i]<<"   m: "<<normconstraints[i]<<"    sigma: "<<sigma<<"\n"<<std::endl;
+   
   }
   
   ////////////
@@ -277,7 +281,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   std::cout<<"LH val at best fit: "<<lhval<<std::endl;
   printf("-------------------------------------------------------------------------------------\n");
 
-  /*  
+  
   //If Want to plot for testing purposes:  
   BinnedED TotalResult("TotalResult",axes);
   BinnedED ConstrainedTotalResult("ConstrainedTotalResult",axes);
@@ -379,7 +383,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   FitHist.Draw("same");//FitHist.Draw("same e");
   ConstrainedHist.SetLineColor(kGreen);
   ConstrainedHist.SetLineWidth(3);
-  //ConstrainedHist.Draw("same");
+  ConstrainedHist.Draw("same");
   leg->Draw();
   
   pt.Draw();
@@ -389,7 +393,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   c1->Write();
   
   fitout->Close();
-  */  
+    
   return lhval;
 }
 

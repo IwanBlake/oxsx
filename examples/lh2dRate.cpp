@@ -150,7 +150,6 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   // 1. Set Up PDFs //
   ////////////////////
   
-  
   ParameterDict minima;
   ParameterDict maxima;
   ParameterDict initialval;
@@ -163,6 +162,9 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   lhFunction.SetDataDist(dataSetPdf); // initialise withe the data set
   double rand = r1->Rndm();
 
+  double livetime = 145.1/365;
+  double generator_to_kl_factor = 0.798791; //to make agree with best fit spectra at d21=6.9e-5  s12=0.5  s13=0.
+  
   // allowing for oscillation of constraints, calculating the generator's predicted oscillated total integral
   double oscconstraintint = 0.;
   for (int i = 0; i < numPdfs; i++){
@@ -176,24 +178,31 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
       exit(1);
     }
     double osc_loss = oscPdfint/(double)unoscPdfint;      // calculate loss in pdf integral
-    std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
-    normconstraints[i] = normconstraints[i]*osc_loss;
+    //std::cout<<" osc loss factor: "<<osc_loss<<std::endl;
+    //std::cout<<"\n"<<reactorNames[i]<<"Expected per year:                  mean: "<<normconstraints[i]<<std::endl;
+    normconstraints[i] = normconstraints[i]*osc_loss; // Still need to oscillate original, generator predicted constraints
+    //std::cout<<"After oscillating:                    mean: "<<normconstraints[i]<<std::endl;
     oscconstraintint += normconstraints[i];
   }
 
+  
   if (!isFakeData){ 
     //renomalising oscillated constraints, to KL Oscillated spectrum integral
     double DataInt = dataSetPdf.Integral();
     std::cout<<" Data Integral: "<<DataInt<<std::endl;
     double oscrenormInt = 0.;
     for (int i = 0; i < numPdfs; i++){
-      normconstraints[i] = ((normconstraints[i]/oscconstraintint)*DataInt); 
+
+      normconstraints[i] = normconstraints[i]*livetime; // KL Paper 1 livetime
+      //std::cout<<"After livetime:                       mean: "<<normconstraints[i]<<std::endl;
+      normconstraints[i] = normconstraints[i]*generator_to_kl_factor; // to make agree with best fit spectra
+      //std::cout<<"After generator to KL ratio:          mean: "<<normconstraints[i]<<std::endl;
       oscrenormInt += normconstraints[i];
-      std::cout<<reactorNames[i]<<"   mean: "<<normconstraints[i]<<"  sigma: "<<(normconstraintsuncert[i]*normconstraints[i])<<std::endl;
     }
-  
+    
     std::cout<<"\n Integral of measured (oscillated) KL Data: "<<DataInt<<std::endl;
     std::cout<<" Integral of oscillated renormalised constraints: "<<oscrenormInt<<"\n"<<std::endl;
+    
   }else{
     double DataInt = dataSetPdf.Integral();
     std::cout<<" Data Integral: "<<DataInt<<std::endl;
@@ -232,14 +241,14 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
     minima[name] = Normmin;
     maxima[name] = Normmax;
     
-    double sigma = (normconstraintsuncert[i]*normconstraints[i]);
-    
+    double sigma = (normconstraintsuncert[i]*normconstraints[i]);    
     initialval[name] = normconstraints[i];//(rand*(maxima[name]-minima[name]))+minima[name];
     initialerr[name] = sigma;//0.5*initialval[name];
     
     lhFunction.AddDist(*reactorPdf);
     lhFunction.SetConstraint(name, normconstraints[i], sigma);
     std::cout<<reactorNames[i]<<"   m: "<<normconstraints[i]<<"    sigma: "<<sigma<<"\n"<<std::endl;
+    
   }
   
   ////////////
@@ -277,7 +286,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   std::cout<<"LH val at best fit: "<<lhval<<std::endl;
   printf("-------------------------------------------------------------------------------------\n");
 
-  /*  
+  /*
   //If Want to plot for testing purposes:  
   BinnedED TotalResult("TotalResult",axes);
   BinnedED ConstrainedTotalResult("ConstrainedTotalResult",axes);
@@ -337,7 +346,6 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
       ConstrainedreactorPdf->Fill(ConstrainedreactorNtp.GetEntry(j));
     ConstrainedreactorPdf->Normalise();
 
-    std::cout<<reactorNames[i]<<"                "<<normconstraints[i]<<std::endl;
     ConstrainedreactorPdf->Scale(normconstraints[i]);
 
     ConstrainedTotalResult.Add(*ConstrainedreactorPdf,1);
@@ -354,9 +362,9 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   FitHist = DistTools::ToTH1D(TotalResult);
   ConstrainedHist = DistTools::ToTH1D(ConstrainedTotalResult);
 
-  std::cout<<"Data Int: "<<DataHist.Integral()<<std::endl;
+  std::cout<<"\nData Int: "<<DataHist.Integral()<<std::endl;
   std::cout<<"Best Fit Pdf Int: "<<FitHist.Integral()<<std::endl;
-  std::cout<<"Constrained No Fit Pdf Int: "<<FitHist.Integral()<<std::endl;
+  std::cout<<"Constrained No Fit Pdf Int: "<<ConstrainedHist.Integral()<<std::endl;
   
   TH1D FullFit("FullFit","",FitHist.GetNbinsX(),FitHist.GetXaxis()->GetXmin(),FitHist.GetXaxis()->GetXmax());
   FullFit.Add(&FitHist);
@@ -374,12 +382,12 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   DataHist.SetTitle("Data (blue bars) best fit(red)");  
   DataHist.GetYaxis()->SetTitle(Form("Counts"));
   DataHist.Draw("same");
+  ConstrainedHist.SetLineColor(kGreen);
+  ConstrainedHist.SetLineWidth(3);
+  ConstrainedHist.Draw("same");
   FitHist.SetLineColor(kRed);
   FitHist.SetLineWidth(2);
   FitHist.Draw("same");//FitHist.Draw("same e");
-  ConstrainedHist.SetLineColor(kGreen);
-  ConstrainedHist.SetLineWidth(3);
-  //ConstrainedHist.Draw("same");
   leg->Draw();
   
   pt.Draw();
@@ -389,7 +397,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   c1->Write();
   
   fitout->Close();
-  */  
+  */    
   return lhval;
 }
 

@@ -61,7 +61,8 @@ cd ~/oxsx/util/
 #are you using lh2dgaus??????#
 #   using right csv file?    #
 ##############################
-lh2d_loc = '/data/snoplus/blakei/antinu/mc/plots/sensitivity/SNOP_1yr_FakeAsimovData_LowStatPdfs_d21_7.4e-5_s12_0.297_0.0215_E2.6_R5500_loglog_tan.root'
+
+lh2d_loc = '/data/snoplus/blakei/antinu/sensitivity_plots/KL_1stPaper_ShapeandRate_KLcuts_livetime145.1_KLGenratio_0.798791_100passes_loglog_tan.root'
 
 textfile_loc = '/data/snoplus/blakei/antinu/temp/fitresulttxtfiles/Results'
 textfile_loc += "_"
@@ -71,14 +72,16 @@ print textfile_name
 
 def LH2Dsubmit():
     Emin = 2.6  #1
-    Emax = 8.  #2
-    numbins = 16 #3
+    Emax = 8.125  #2
+    numbins = 13 #3
 
-    infofile = '/home/blakei/code/workshop/oxsx/1000km.ratdb' #4
-    constraintcsv = '/home/blakei/antinu_analysis/passes/processed/passes_snop_rat6169_2017_flux1_scintFitter_cleanround1_plots.csv' #1000km 100pass E2.6 R1_R2 5500 #7
+    infofile = '/home/blakei/code/workshop/oxsx/Iwamoto.csv' #1000km.ratdb' #4
+    constraintcsv = '/home/blakei/antinu_analysis/passes/processed/passes_kamland_rat6169_iwamoto_paper1cuts_flux1_scintFitter_cleanround1_plots.csv'  # 100pass E2.6 R1_R2 5500 #7
+    #'/home/blakei/antinu_analysis/passes/processed/passes_kamland_rat6169_iwamoto_flux1_scintFitter_cleanround1_plots.csv'
 
+    
     dataconstraints_loc = '/data/snoplus/blakei/antinu/temp/data_constraints.root' #5
-    lh2d = sutil.setup_histogram_loglog_tan() #sutil.setup_histogram() #setup_histogram()
+    lh2d = sutil.setup_histogram_KL1_loglin_sin() #sutil.setup_histogram() #setup_histogram()
     
     #Data:
     #1
@@ -88,14 +91,24 @@ def LH2Dsubmit():
     fakes12 = 0.297 #0.36 #9
     fakes13 = 0.0215 #10
     
-    PHWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/rat6169_2017/PHWR_flux1_day360_passcombined100_cleanround1.root' #11
-    PWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/rat6169_2017/1000km_no3cad_flux1_day360_passcombined100_cleanround1.root' #12
+    #PHWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/rat6169_2017/PHWR_flux1_day360_passcombined100_cleanround1.root' #11
+    #PWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/rat6169_2017/1000km_no3cad_flux1_day360_passcombined100_cleanround1.root' #12
+
+    PHWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/kl_iwamoto_rat6169/all_iwamoto_ECorrec_flux1_day365_passcombined100_cleanround1.root' #11
+    PWRunoscfile = '/data/snoplus/blakei/antinu/mc/ntuples/kl_iwamoto_rat6169/all_iwamoto_ECorrec_flux1_day365_passcombined100_cleanround1.root' #12
     
+    #subprocess.check_call(("""source {0}
+#cd ~/oxsx/examples/
+#. ~/oxsx/bin/compile_with_ratIwan.sh lh2dInit2.cpp
+#./lh2dInit2 {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
+#. ~/oxsx/bin/compile_with_ratIwan.sh lh2d2.cpp""").format(ENVIRONMENT_PATH,Emin,Emax,numbins,infofile,dataconstraints_loc.split('.')[0],tempfile_loc+'.root',constraintcsv,faked21,fakes12,fakes13,PHWRunoscfile,PWRunoscfile), shell = True)#"array"), shell = True)
+
+### array data ####
     subprocess.check_call(("""source {0}
 cd ~/oxsx/examples/
 . ~/oxsx/bin/compile_with_ratIwan.sh lh2dInit2.cpp
-./lh2dInit2 {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12}
-. ~/oxsx/bin/compile_with_ratIwan.sh lh2d2.cpp""").format(ENVIRONMENT_PATH,Emin,Emax,numbins,infofile,dataconstraints_loc.split('.')[0],tempfile_loc+'.root',constraintcsv,faked21,fakes12,fakes13,PHWRunoscfile,PWRunoscfile), shell = True)#"array"), shell = True)
+./lh2dInit2 {1} {2} {3} {4} {5} {6} {7} {8}
+. ~/oxsx/bin/compile_with_ratIwan.sh lh2dRate.cpp""").format(ENVIRONMENT_PATH,Emin,Emax,numbins,infofile,dataconstraints_loc.split('.')[0],tempfile_loc+'.root',constraintcsv,"array"), shell = True)
 ##############################
 #are you using lh2dgaus??????#
 ##############################
@@ -106,7 +119,7 @@ cd ~/oxsx/examples/
     submitcommandsarray = []
     
     totalbins = bins_x_n*bins_y_n
-    fitspersub = 15
+    fitspersub = 36
     numsubs = totalbins/fitspersub
     print 'total bins: '+str(totalbins)
     print 'fitspersub: '+str(fitspersub)
@@ -126,16 +139,20 @@ cd ~/oxsx/examples/
     SUB = 1
     for i in range(bins_x_n):
         for j in range(bins_y_n):
-            s12 = np.power(np.sin(np.arctan(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))),2)
+            s12 = np.power(np.sin(np.arcsin(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))/2),2) #KL paper1 (x axis is ssqr(2*theta)
+            #s12 = np.power(np.sin(np.arctan(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))),2)
             d21 = lh2d.GetYaxis().GetBinCenter(j+1)*10**-5
             
 ##############################
 #are you using lh2dgaus??????#
 ##############################            
+            #commands += ("""
+#./lh2d2 {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16}
+#""").format(PHWRunoscfile,dataconstraints_loc.split('.')[0],infofile,d21,s12,fakes13,i+1,j+1,Emin,Emax,numbins,textfile_loc+'{0}.txt'.format(SUB),tempfile_loc+'{0}.root'.format(SUB),PWRunoscfile,faked21,fakes12,fakes13)
             commands += ("""
-./lh2d2 {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16}
-""").format(PHWRunoscfile,dataconstraints_loc.split('.')[0],infofile,d21,s12,fakes13,i+1,j+1,Emin,Emax,numbins,textfile_loc+'{0}.txt'.format(SUB),tempfile_loc+'{0}.root'.format(SUB),PWRunoscfile,faked21,fakes12,fakes13)
-            
+./lh2dRate {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13}
+""").format(PHWRunoscfile,dataconstraints_loc.split('.')[0],infofile,d21,s12,fakes13,i+1,j+1,Emin,Emax,numbins,textfile_loc+'{0}.txt'.format(SUB),tempfile_loc+'{0}.root'.format(SUB),PWRunoscfile)
+
             k += 1
             #print k
             if (k % fitspersub == 0):
@@ -171,7 +188,7 @@ cd ~/oxsx/examples/
         
 def LH2Dplot():
 
-    lh2d = sutil.setup_histogram_loglog_tan() #sutil.setup_histogram() #setup_histogram()
+    lh2d = sutil.setup_histogram_KL1_loglin_sin() #sutil.setup_histogram_loglog_tan()
     
     textfiles = []
     for path, subdirs, files in os.walk(textfile_loc.rsplit('/',1)[0]):
@@ -198,7 +215,7 @@ def LH2Dplot():
 mv {0} {1}""").format(textfiles[k], textfiles[k].rsplit('/fitresulttxtfiles/',1)[0] + "/oldfitresulttxtfiles/" + textfiles[k].rsplit('/',1)[1]), shell = True)
 
     c = ROOT.TCanvas()
-    c.SetLogx(True)
+    c.SetLogx(False)#True)
     c.SetLogy(True)
     lh2d.Draw("COLZ")
     c.SetLeftMargin(0.2)
@@ -287,9 +304,11 @@ def H2interact():
     
 
 def H2Contour():
-    conf_lev1 = 0.68 #0.95
-    conf_lev2 = 0.95 #0.99
-    conf_lev3 = 0.9973
+    
+    conf_lev1 = 0.97 #0.95
+    conf_lev2 = 0.97 #0.99
+    conf_lev3 = 0.97 #0.9973
+    
     Zscore1 = st.norm.ppf(conf_lev1+((1-conf_lev1)/2))
     Zscore2 = st.norm.ppf(conf_lev2+((1-conf_lev2)/2))
     Zscore3 = st.norm.ppf(conf_lev3+((1-conf_lev3)/2))
@@ -298,6 +317,12 @@ def H2Contour():
     delL3 = ((Zscore3)**2)/2
 
     print delL1, delL2, delL3
+    """ 
+    conf_lev_KL_1 = 0.99
+    Zscore = st.norm.ppf(conf_lev_KL_1+((1-conf_lev_KL_1)/2))
+    delL_KL_1 = ((Zscore)**2)/2
+    print delL_KL_1
+    """
     
     fin = ROOT.TFile.Open(lh2d_loc, 'READ')
     
@@ -308,10 +333,9 @@ def H2Contour():
     maxxbin = ROOT.Long(0)
     maxybin = ROOT.Long(0)
     binz = ROOT.Long(0)
-    #Max = 0
     lh2d.GetBinXYZ(bin,maxxbin,maxybin,binz)
-    #contours = np.array([Max - 4.5,Max - 2.,Max - 0.5])
     contours = np.array([Max - delL3,Max - delL2,Max - delL1])
+    #contours_KL = np.array([Max - delL_KL_1])
     maxx = lh2d.GetXaxis().GetBinCenter(maxxbin)
     maxy = lh2d.GetYaxis().GetBinCenter(maxybin)
     print maxx, maxy, Max
@@ -321,9 +345,10 @@ def H2Contour():
     c = ROOT.TCanvas("c1", "c1", int(1000*1.18), 1000)
     c.SetLogx(True)
     c.SetLogy(True)
-    lh2d.GetXaxis().SetRangeUser(0.1, 6.05)
-    lh2d.GetYaxis().SetRangeUser(1.5, 25)
+    #lh2d.GetXaxis().SetRangeUser(0.1, 6.05)
+    #lh2d.GetYaxis().SetRangeUser(1.5, 25)
     lh2d.SetContour(3,contours)
+    #lh2d.SetContour(1,contours_KL)
     
     ###### 1 ########
     lh2d.Draw("colz")
@@ -331,10 +356,18 @@ def H2Contour():
     
     ###### 2 #######
     #lh2d.Draw("contz same")
+
+    ###### KL_Paper 1 ########
+    #lh2d.Draw("colz")
+    #lh2d.SetMinimum(Max - delL_KL_1)
+        ## or ##
+    #lh2d.Draw("contz same")
+
     
     c.SetLeftMargin(0.2)
     c.SetRightMargin(0.2)
     c.SetBottomMargin(0.2)
+
     
     '''
     c = ROOT.TCanvas()

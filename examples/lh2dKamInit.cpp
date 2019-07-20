@@ -47,8 +47,6 @@
 
 #include <TVectorD.h>
 
-#include <locale>
-#include <boost/algorithm/string.hpp>
 int unoscPdfint;
 int oscPdfint;
 
@@ -69,21 +67,23 @@ void OscPromptE (const std::string infile, const std::string outfile,  double de
   
   unoscPdfint = 0;
   oscPdfint = 0;
-
+  
   TFile *fin = TFile::Open(infile.c_str());
-  TTree *T = (TTree *) fin->Get("nt");
+  TNtuple *T = (TNtuple *) fin->Get("nt");
 
   TFile *fout = new TFile(outfile.c_str(), "RECREATE");
   TNtuple* ntout = new TNtuple("nt","nt","E1");
-  Double_t parke, Energy;
+
+  float parke, Energy;
   
-  T->SetBranchAddress("mc_neutrino_energy", &parke);
-  T->SetBranchAddress("ev_fit_energy_p1", &Energy);
+  T->SetBranchAddress("ParKE", &parke);
+  T->SetBranchAddress("E1", &Energy);
   //T->SetBranchAddress("ReactorDistance", &ReactorDistance); // Average distance taken from info file, not event by event (though it can be)
 
   double survprob;
   TRandom3 *r1 = new TRandom3();
   r1->SetSeed(0);    
+
   for(int i = 0; i < T->GetEntries(); i++){
     T->GetEntry(i);
     
@@ -114,7 +114,7 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
   std::fill(nCores.begin(), nCores.end(), 0);
   std::fill(powers.begin(), powers.end(), 0.);
 
-  std::string reactorName,distance,reactorType,nCore,power,powererr;
+  std::string reactorName,distance,reactorType,nCore,power;
   int lineNo = 0;
 
   // read until end of file.
@@ -123,8 +123,7 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
     std::getline(in,distance,',');
     std::getline(in,reactorType,',');
     std::getline(in,nCore,',');
-    std::getline(in,power,',');
-    std::getline(in,powererr,'\n');
+    std::getline(in,power,'\n');
 
     if (lineNo>0){ //skip csv header
       if (strcmp(reactorName.c_str(),"")!=0) {
@@ -143,11 +142,11 @@ void readInfoFile(const std::string &runInfoFileName, std::vector<std::string> &
 }
 
 int main(int argc, char *argv[]) {
-  int FakeDataArgc = 12 + 1;
-  int NoFakeDataArgc = 8 + 1;
+  int FakeDataArgc = 9 + 1;
+  int NoFakeDataArgc = 7 + 1;
 
   if (argc < NoFakeDataArgc) {
-    std::cout<<"8 (12) arguments expected: \n \n 1: Data Emin \n 2: DataEmax \n 3: numbins \n \n 4: location/filename for reactor info file \n \n 5: filename of rootfile containting constraints and Data (no .root!) \n 6: temporary root file to fill ntuples (can delete afterwards) \n 7:location of csv file containing reactor norm constratints \n \n 8: type 'array' or the location/filename for data spectrum to be fit (pruned ntuple with just one entry, EPrompt) \n \n (8): Fake data at d21 \n (9):Fake data at s12 \n (10):Fake data at s13 \n (11): location of PHWR UnOsc pruned Ntuple file \n (12): location of PWR UnOsc pruned Ntuple file "<<std::endl;
+    std::cout<<"7 (9) arguments expected: \n \n 1: Data Emin \n 2: DataEmax \n 3: numbins \n \n 4: location/filename for reactor info file \n \n 5: filename of rootfile containting constraints and Data (no .root!) \n 6: temporary root file to fill ntuples (can delete afterwards) \n \n 7: location/filename for data spectrum to be fit (pruned ntuple with just one entry, EPrompt) \n (7): Fake data at d21 \n (8):Fake data at s12 \n (9): location of UnOsc pruned Ntuple file "<<std::endl;
   }
   else{
     const std::string &infoFile = argv[4];
@@ -188,174 +187,83 @@ int main(int argc, char *argv[]) {
 
     std::vector<double> normconstraints;
     std::vector<double> normconstraintsuncert;
-
-    // Reading constraints from csv file
-    ifstream ip;
-    const std::string &csvconstraints = argv[7];
-    ip.open(csvconstraints.c_str());
-    if (!ip.is_open()) std::cout<<"Error in opening csv file"<<std::endl;
-
-    std::string reactorname_csv;
-    std::string fit_norm_csv;
-    std::string fit_norm_err_csv;
-    std::string fit_norm_sigma_csv;
-    std::string fit_norm_sigma_err_csv;
-
-    std::vector<std::string> reactornamevecUnSorted;
-    std::vector<double> fitnormmeanvecUnSorted;
-    std::vector<double> fitnormsigmavecUnSorted;
-
-    double totalnormmean;
-    double totalsigma;
+    /*normconstraints.push_back(93.);
+    normconstraints.push_back(21.);
+    normconstraints.push_back(20.);
+    normconstraintsuncert.push_back(0.1);
+    normconstraintsuncert.push_back(0.1);
+    normconstraintsuncert.push_back(0.1);
+    */
     
-    std::string line;
-    std::string cell;
-    while (getline(ip,line,'\n')){
-      int i = 0;
-      std::stringstream linestream(line);
-      while(getline(linestream,cell,',')){
-	if (i == 0)
-	  reactorname_csv = cell;
-	if (i == 1)
-	  fit_norm_csv = cell;
-	if (i == 2)
-	  fit_norm_err_csv = cell;
-	if (i == 3)
-	  fit_norm_sigma_csv = cell;
-	if (i == 4)
-	  fit_norm_sigma_err_csv = cell;
-	i += 1;
-      }
-      if (reactorname_csv != "reactor"){
-	if (reactorname_csv == "combinedall"){
-	  totalnormmean = atof(fit_norm_csv.c_str());
-	  totalsigma = atof(fit_norm_sigma_csv.c_str());
-	}else{
-	  reactornamevecUnSorted.push_back(reactorname_csv);
-	  fitnormmeanvecUnSorted.push_back(atof(fit_norm_csv.c_str()));
-	  fitnormsigmavecUnSorted.push_back(atof(fit_norm_sigma_csv.c_str()));
-	  std::cout<<reactorname_csv<<"  "<<fit_norm_csv<<"  "<<fit_norm_err_csv<<"  "<<fit_norm_sigma_csv<<" "<<fit_norm_sigma_err_csv<<std::endl;
-	}
-      }
-    }
-    ip.close();
+    normconstraints.push_back(6.469); //shika
+    normconstraints.push_back(24.0); //tsuruga
+    normconstraints.push_back(25.21); //mihama
+    normconstraints.push_back(30.4531);// kashiwazaki
+    normconstraints.push_back(38.3548);// ohi
+    normconstraints.push_back(25.718);// takahama
+    normconstraints.push_back(10.245);// hamaoka
+    normconstraints.push_back(5.34);// tokai
+    normconstraints.push_back(5.823);//fukushima
+    normconstraints.push_back(2.477);//shimane
+    normconstraints.push_back(3.162);//onogame
+    normconstraints.push_back(2.722);//hanul
+    normconstraints.push_back(2.55);//kori
+    normconstraints.push_back(2.314);//genkai
     
-    std::cout<<"Total Combined reactors fit norm: "<<totalnormmean<<" total sigma: "<<totalsigma<<std::endl;
+    normconstraintsuncert.push_back(0.29755/6.469); //shika
+    normconstraintsuncert.push_back(0.45127/24.0); //tsuruga
+    normconstraintsuncert.push_back(0.5592/25.21); //mihama
+    normconstraintsuncert.push_back(0.6619/30.4531);// kashiwazaki
+    normconstraintsuncert.push_back(0.6537/38.3548);// ohi
+    normconstraintsuncert.push_back(0.7566/25.718);// takahama
+    normconstraintsuncert.push_back(0.36/10.245);// hamaoka
+    normconstraintsuncert.push_back(0.23065/5.34);// tokai
+    normconstraintsuncert.push_back(0.28308/5.823);//fukushima
+    normconstraintsuncert.push_back(0.2272/2.477);//shimane
+    normconstraintsuncert.push_back(0.252/3.162);//onogame
+    normconstraintsuncert.push_back(0.14706/2.722);//hanul
+    normconstraintsuncert.push_back(0.17406/2.55);//kori
+    normconstraintsuncert.push_back(0.21997/2.314);//genkai
+    //double antinueffic = 0.85;
 
-    if (reactornamevecUnSorted.size() != numPdfs){
-      std::cout<<"number data norm constraints dont match number of Pdfs!!"<<std::endl;
-      return 0;
-    }
-
-    for (int i = 0; i < reactorNames.size(); i++){
-      std::string NAME = reactorNames[i];
-      std::string name = boost::algorithm::to_lower_copy(NAME);
-      size_t foundspace1 = name.find(' ');
-      if (foundspace1 != std::string::npos){
-	name.erase(foundspace1, 1);
-	size_t foundspace2 = name.find(' ');
-	if (foundspace2 != std::string::npos){
-	  name.erase(foundspace2, 1);
-	}
-      }
-      std::cout<<name<<std::endl;
-      
-      std::vector<std::string>::iterator it = std::find(reactornamevecUnSorted.begin(), reactornamevecUnSorted.end(), name);
-      
-      if (it == reactornamevecUnSorted.end())
-	std::cout << "Element Not Found" << std::endl;
-      
-      int index = std::distance(reactornamevecUnSorted.begin(), it);
-
-      normconstraints.push_back(fitnormmeanvecUnSorted[index]);
-      //double sigma_over_norm_sqrd = pow(fitnormsigmavecUnSorted[index]/fitnormmeanvecUnSorted[index],2);
-      //double total_sigma_over_norm_sqrd = pow(totalsigma/totalnormmean,2);
-   
-      //normconstraintsuncert.push_back(sqrt(total_sigma_over_norm_sqrd+sigma_over_norm_sqrd));
-      normconstraintsuncert.push_back(fitnormsigmavecUnSorted[index]/fitnormmeanvecUnSorted[index]);
-      std::cout<<"reactorname "<<reactorNames[i]<<" norm "<<normconstraints[i]<<" sigma/norm "<<normconstraintsuncert[i]<<std::endl;
-    }
-    
-
-    double antinueffic = 1.;//0.85;
-    //double yearfrac = 1.;
-    
-    double FitConstraintsTotalInt = 0.;
+    double constrainttotal = 0;
     std::cout<<"data vector length: "<<normconstraints.size()<<std::endl;
     for (int i = 0; i < normconstraints.size(); i++){
-      normconstraints[i] = (normconstraints[i]*antinueffic);
-      FitConstraintsTotalInt += normconstraints[i];
+      //normconstraints[i] = (normconstraints[i]*antinueffic);
+      constrainttotal += normconstraints[i];
     }
-    std::cout<<"Fit Constraints Int: "<<FitConstraintsTotalInt<<std::endl;
-
+    for (int i = 0; i < normconstraints.size(); i++){
+      normconstraints[i] = ((normconstraints[i]/constrainttotal)*dataintegral);
+    }
     if (normconstraints.size() != numPdfs){
       std::cout<<"number data norm constraints dont match number of Pdfs!!"<<std::endl;
       return 0;
     }
-    
+
     const std::string &tempFile = argv[6];
     
     std::vector<double> databincontents;
-
     if (argc == NoFakeDataArgc){
-      const std::string &ntupleorarray = argv[8];
-
-      if (ntupleorarray == "array"){
-	std::cout<<" Using array for data defined in lh2dInit.cpp!!"<<std::endl;
-	//Using data from paper (digitised)
-	//double OscDatacontentarray[15] = {12.5397, 89.0563, 118.848, 120.102, 100.032, 144.249, 158.047, 130.764, 139.858, 104.109, 63.6553, 41.3902, 29.4737, 10.6581, 8.46297};
-	const int arraynum = 13;
-	double OscDatacontentarray[arraynum] = {7, 11, 9, 8, 8, 4, 5, 2, 0, 0, 0, 0, 0}; //2.6 to 6 0.425 bins   2.6 to 8.125
-
-	if (numbins != arraynum){
-	  std::cout<<"wrong number of bins!!"<<std::endl;
-	  return 0;
-	}
-      
-	double DataInt = 0.;
-      
-	std::cout<<"\n  Digitised KL Paper binc contents: "<<std::endl;
-	for (int i = 0; i < arraynum; i++){
-	  databincontents.push_back(OscDatacontentarray[i]);
-	  std::cout<<"i="<<i<<"  "<<databincontents[i]<<std::endl;
-	  DataInt += OscDatacontentarray[i];
-	}
+      const std::string &dataFile = argv[7];
+      ROOTNtuple dataNtp("", "nt");
+ 
+      for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
+	dataSetPdf.Fill(dataNtp.GetEntry(i));
 	
-	std::cout<<"Integral of measured (oscillated) KL Data: "<<DataInt<<std::endl;
-	//end of Kl digitised data
-	ssout<<dataconstraintoutFile<<".root";
-      }
-      else{
-	ROOTNtuple dataNtp(ntupleorarray, "nt");
-	
-	for(size_t i = 0; i < dataNtp.GetNEntries(); i++)
-	  dataSetPdf.Fill(dataNtp.GetEntry(i));
-	
-	databincontents = dataSetPdf.GetBinContents();
-	ssout<<dataconstraintoutFile<<".root";
-      }
+      databincontents = dataSetPdf.GetBinContents();
+      ssout<<dataconstraintoutFile<<".root";
     }
     else if(argc == FakeDataArgc){
-      std::cout<<" \nUsing Fake oscillated data!!"<<std::endl;
-      double FakeDatad21 = atof(argv[8]);
-      double FakeDatas12 = atof(argv[9]);
-      double FakeDatas13 = atof(argv[10]);
-      const std::string &PHWRUnOscfile = argv[11];
-      const std::string &PWRUnOscfile = argv[12];
+      // Generating fake data for 3CAD, norms put in by hand below, taken from number of event expected from the 3CAD reactors using flux=1, 1yr data
+      double FakeDatad21 = atof(argv[7]);
+      double FakeDatas12 = atof(argv[8]);
+      const std::string &UnOscfile = argv[9];
 
-      ssout<<dataconstraintoutFile<<"ds21_"<<FakeDatad21<<"s12_"<<FakeDatas12<<"s13_"<<FakeDatas13<<".root";
-      
-      // Generating fake data for 3CAD (given chosen osc params that are not told to the fitter)
+      ssout<<dataconstraintoutFile<<"ds21_"<<FakeDatad21<<"s12_"<<FakeDatas12<<".root";
+      /*
       for (int i = 0; i< numPdfs; i++){
-	if (reactorTypes[i] == "PHWR")
-	  OscPromptE(PHWRUnOscfile, tempFile,FakeDatad21,FakeDatas12,FakeDatas13,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
-	else if (reactorTypes[i] == "BWR" || reactorTypes[i] == "PWR")
-	  OscPromptE(PWRUnOscfile, tempFile,FakeDatad21,FakeDatas12,FakeDatas13,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
-	else{
-	  std::cout<<" Incorrect reactor type!"<<std::endl;
-	  exit(1);
-	}
-
+	OscPromptE(UnOscfile, tempFile,FakeDatad21,FakeDatas12,0.0215,distances[i]);   //oscillate each pdf -> outputs a pruned ntuple with an oscillated EPrompt positron spectrum called tempFile, to be used below to fill a reactorPdf
+      
 	BinnedED *dataPdf = new BinnedED(reactorNames[i],axes);
 	dataPdf->SetObservables(0);
     
@@ -374,15 +282,42 @@ int main(int argc, char *argv[]) {
   
 	dataSetPdf.Add(*dataPdf,1);
       }
+      */
+
       
       databincontents = dataSetPdf.GetBinContents();
-      // End of fake data      
-      
     }
     else{
       std::cout<<"Wrong number of arguments!!"<<std::endl;
       return 0;
     }	
+    
+    //TH1D DataHist;
+    //DataHist = DistTools::ToTH1D(dataSetPdf);
+    //DataHist.SetName("DataHist");
+    /*
+    double s12min = atof(argv[5]);
+    double s12max = atof(argv[6]);
+    double d21min = atof(argv[8]);//1e-5;
+    double d21max = atof(argv[9]);//20e-5;
+    
+    int num_s12 = atoi(argv[7]);
+    int num_d21 = atoi(argv[10]);
+    
+    TH2D *h2 = new TH2D("lh2d", "lh2d", num_s12,s12min,s12max,num_d21,d21min,d21max);
+    
+    h2->GetXaxis()->SetTitle("(sintheta12)^2");
+    h2->GetXaxis()->SetTitleSize(0.05);
+    h2->GetXaxis()->SetTitleOffset(0.9);
+    h2->GetXaxis()->CenterTitle();
+    h2->GetYaxis()->SetTitle("(delm21)^2 (eV^2)");
+    h2->GetYaxis()->SetTitleSize(0.05);
+    h2->GetYaxis()->SetTitleOffset(1);
+    h2->GetYaxis()->CenterTitle();
+    h2->SetLabelSize(0.05,"xyz");
+    h2->SetTitle("Best Fit LH value vs Osc Parameters");
+    std::cout<<"\n \n here \n \n"<<std::endl;
+    */
     
     TFile *fileOut = new TFile(ssout.str().c_str(),"RECREATE");
     TNtuple* datacontentNT = new TNtuple("databincontents","databincontents","counts");
