@@ -286,7 +286,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   std::cout<<"LH val at best fit: "<<lhval<<std::endl;
   printf("-------------------------------------------------------------------------------------\n");
 
-  /*
+  
   //If Want to plot for testing purposes:  
   BinnedED TotalResult("TotalResult",axes);
   BinnedED ConstrainedTotalResult("ConstrainedTotalResult",axes);
@@ -397,7 +397,7 @@ double LHFit(const std::string PHWRUnOscfile, const std::string PWRUnOscfile, co
   c1->Write();
   
   fitout->Close();
-  */    
+      
   return lhval;
 }
 
