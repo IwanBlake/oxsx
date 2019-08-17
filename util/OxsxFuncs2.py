@@ -62,8 +62,7 @@ cd ~/oxsx/util/
 #   using right csv file?    #
 ##############################
 
-lh2d_loc = '/data/snoplus/blakei/antinu/sensitivity_plots/KL_1stPaper_ShapeandRate_KLcuts_livetime145.1_KLGenratio_0.798791_100passes_loglog_tan.root'
-
+lh2d_loc = '/data/snoplus/blakei/antinu/sensitivity_plots/KL_1stPaper_ShapeandRate_KLcuts_livetime145.1_KLGenratio_0.798791_100passes_2_loglog_tan.root'
 textfile_loc = '/data/snoplus/blakei/antinu/temp/fitresulttxtfiles/Results'
 textfile_loc += "_"
 textfile_name = (textfile_loc.rsplit('/',1)[1]).split('_')[0]
@@ -81,7 +80,7 @@ def LH2Dsubmit():
 
     
     dataconstraints_loc = '/data/snoplus/blakei/antinu/temp/data_constraints.root' #5
-    lh2d = sutil.setup_histogram_KL1_loglin_sin() #sutil.setup_histogram() #setup_histogram()
+    lh2d = sutil.setup_histogram_loglog_tan() #sutil.setup_histogram() #setup_histogram()
     
     #Data:
     #1
@@ -139,8 +138,8 @@ cd ~/oxsx/examples/
     SUB = 1
     for i in range(bins_x_n):
         for j in range(bins_y_n):
-            s12 = np.power(np.sin(np.arcsin(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))/2),2) #KL paper1 (x axis is ssqr(2*theta)
-            #s12 = np.power(np.sin(np.arctan(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))),2)
+            #s12 = np.power(np.sin(np.arcsin(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))/2),2) #KL paper1 (x axis is ssqr(2*theta)
+            s12 = np.power(np.sin(np.arctan(np.sqrt(lh2d.GetXaxis().GetBinCenter(i+1)))),2)
             d21 = lh2d.GetYaxis().GetBinCenter(j+1)*10**-5
             
 ##############################
@@ -188,7 +187,7 @@ cd ~/oxsx/examples/
         
 def LH2Dplot():
 
-    lh2d = sutil.setup_histogram_KL1_loglin_sin() #sutil.setup_histogram_loglog_tan()
+    lh2d = sutil.setup_histogram_loglog_tan() #sutil.setup_histogram_loglog_tan()
     
     textfiles = []
     for path, subdirs, files in os.walk(textfile_loc.rsplit('/',1)[0]):

@@ -258,7 +258,7 @@ def setup_histogram_loglog_tan(name = "h_2d"):
 
     bins_x_n = 180 #small = 20, medium = 40, large = 160
     bin_x_min = 0.03 #np.power(np.tan(np.arcsin(np.sqrt(0.355))),2)
-    bin_x_max = np.power(np.tan(np.arcsin(np.sqrt(0.365))),2)
+    bin_x_max = 30 #np.power(np.tan(np.arcsin(np.sqrt(0.365))),2)
     bin_logx_min = np.log10(bin_x_min)
     bin_logx_max = np.log10(bin_x_max)
     bin_x_width = (bin_logx_max-bin_logx_min)/bins_x_n
