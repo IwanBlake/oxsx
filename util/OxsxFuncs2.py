@@ -62,7 +62,7 @@ cd ~/oxsx/util/
 #   using right csv file?    #
 ##############################
 
-lh2d_loc = '/data/snoplus/blakei/antinu/sensitivity_plots/KL_1stPaper_ShapeandRate_KLcuts_livetime145.1_KLGenratio_0.798791_100passes_2_loglog_tan.root'
+lh2d_loc = '/data/snoplus/blakei/antinu/sensitivity_plots/KL_1stPaper_ShapeandRate_KLcuts_livetime145.1_KLGenratio_0.798791_100passes_3_loglog_tan.root'
 textfile_loc = '/data/snoplus/blakei/antinu/temp/fitresulttxtfiles/Results'
 textfile_loc += "_"
 textfile_name = (textfile_loc.rsplit('/',1)[1]).split('_')[0]
@@ -107,7 +107,7 @@ def LH2Dsubmit():
 cd ~/oxsx/examples/
 . ~/oxsx/bin/compile_with_ratIwan.sh lh2dInit2.cpp
 ./lh2dInit2 {1} {2} {3} {4} {5} {6} {7} {8}
-. ~/oxsx/bin/compile_with_ratIwan.sh lh2dRate.cpp""").format(ENVIRONMENT_PATH,Emin,Emax,numbins,infofile,dataconstraints_loc.split('.')[0],tempfile_loc+'.root',constraintcsv,"array"), shell = True)
+. ~/oxsx/bin/compile_with_ratIwan.sh lh2dRate2.cpp""").format(ENVIRONMENT_PATH,Emin,Emax,numbins,infofile,dataconstraints_loc.split('.')[0],tempfile_loc+'.root',constraintcsv,"array"), shell = True)
 ##############################
 #are you using lh2dgaus??????#
 ##############################
@@ -149,7 +149,7 @@ cd ~/oxsx/examples/
 #./lh2d2 {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13} {14} {15} {16}
 #""").format(PHWRunoscfile,dataconstraints_loc.split('.')[0],infofile,d21,s12,fakes13,i+1,j+1,Emin,Emax,numbins,textfile_loc+'{0}.txt'.format(SUB),tempfile_loc+'{0}.root'.format(SUB),PWRunoscfile,faked21,fakes12,fakes13)
             commands += ("""
-./lh2dRate {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13}
+./lh2dRate2 {0} {1} {2} {3} {4} {5} {6} {7} {8} {9} {10} {11} {12} {13}
 """).format(PHWRunoscfile,dataconstraints_loc.split('.')[0],infofile,d21,s12,fakes13,i+1,j+1,Emin,Emax,numbins,textfile_loc+'{0}.txt'.format(SUB),tempfile_loc+'{0}.root'.format(SUB),PWRunoscfile)
 
             k += 1
